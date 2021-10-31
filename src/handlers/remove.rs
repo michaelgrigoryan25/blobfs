@@ -18,7 +18,6 @@ pub async fn handler(form: Json<Remove>) -> Result<Json<Response>, StatusCode> {
         match fsx::remove_file(&hash).await {
             Ok(_) => {
                 removed.push(hash.clone());
-                continue;
             }
             Err(error) => {
                 eprintln!("{}", &error);
