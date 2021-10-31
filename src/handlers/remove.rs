@@ -10,22 +10,19 @@ pub struct Remove {
 
 #[debug_handler]
 pub async fn handler(form: Json<Remove>) -> Result<Json<Response>, StatusCode> {
-    // Vector of removed hashes
     let mut removed: Vec<String> = vec![];
+    // Vector of skipped hashes
+    let mut skipped: Vec<String> = vec![];
 
     for hash in &form.hashes {
         // Removing the file by hash
-        match fsx::remove_file(&hash).await {
-            Ok(_) => {
-                removed.push(hash.clone());
-            }
-            Err(error) => {
-                eprintln!("{}", &error);
-                return Err(StatusCode::INTERNAL_SERVER_ERROR);
-            }
-        };
+        if fsx::remove_file(hash).is_ok() {
+            removed.push(hash.clone());
+        } else {
+            skipped.push(hash.to_string());
+        }
     }
 
     // Sending a JSON response
-    Ok(Json::from(Response::new(removed)))
+    Ok(Json::from(Response::new(removed, skipped)))
 }

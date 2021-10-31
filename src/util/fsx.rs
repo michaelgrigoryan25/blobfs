@@ -15,17 +15,21 @@ pub fn get_from_hash(hash: &str) -> Result<File, io::Error> {
 }
 
 // An interface for removing files with their hash from `data` directory
-pub async fn remove_file(hash: &str) -> Result<(), Error> {
+pub fn remove_file(hash: &str) -> Result<Result<(), Error>, &str> {
     let path = format!("./data/files/{}", &hash);
-    let pattern = format!("{}.*", &path);
-    let entries = glob(&pattern).expect("Failed to read glob pattern");
+    let pattern = format!("{}*", &path);
+    // Getting the first entry from match list
+    let entry = glob(&pattern)
+        .expect("Failed to read glob pattern")
+        .flatten()
+        .into_iter()
+        .next();
 
-    Ok(for entry in entries {
-        return match &entry {
-            Ok(path) => fs::remove_file(&path.as_os_str()),
-            _ => break,
-        };
-    })
+    if let Some(path) = entry {
+        return Ok(fs::remove_file(&path.as_os_str()));
+    }
+
+    Err("File could not be found")
 }
 
 // An interface for creating files in `data` directory
