@@ -6,7 +6,7 @@ pub mod upload;
 #[derive(Serialize)]
 pub struct Response {
     hashes: Vec<String>,
-    skipped: Vec<String>
+    skipped: Vec<String>,
 }
 
 impl Response {

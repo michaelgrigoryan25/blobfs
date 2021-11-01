@@ -19,7 +19,7 @@ pub async fn handler(multipart: Multipart) -> Result<Json<Response>, StatusCode>
             match fsx::write_file(data, &mime) {
                 Ok(hash) => hashes.push(hash),
                 Err(error) => {
-                    eprintln!("{}", &error);
+                    error!("{}", &error);
                     return Err(StatusCode::INTERNAL_SERVER_ERROR);
                 }
             };

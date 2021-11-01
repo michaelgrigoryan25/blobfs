@@ -4,3 +4,5 @@ data/keys/*
 !data/keys/.gitkeep
 data/files/*
 !data/files/.gitkeep
+data/logs/*
+!data/logs/.gitkeep
