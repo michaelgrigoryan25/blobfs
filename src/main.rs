@@ -1,15 +1,14 @@
 #[macro_use]
 extern crate log;
-
 #[macro_use]
 extern crate axum_debug;
 
 use crate::{
-    handlers::{remove, upload},
+    handlers::{not_found, remove, upload},
     util::init_loggers,
 };
 use axum::{
-    handler::{delete, post},
+    handler::{delete, post, Handler},
     Router,
 };
 use std::{env, process::exit};
@@ -44,7 +43,8 @@ async fn main() {
     // Initializing the routes
     let stormi = Router::new()
         .route("/upload", post(upload::handler))
-        .route("/remove", delete(remove::handler));
+        .route("/remove", delete(remove::handler))
+        .or(not_found::handler.into_service());
 
     let server = axum::Server::bind(&addr).serve(stormi.into_make_service());
 

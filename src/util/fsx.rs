@@ -1,23 +1,22 @@
+use crate::util::get_string_path;
 use axum::body::Bytes;
 use glob::glob;
 use infer::Type;
 use rand::{distributions::Alphanumeric, Rng};
-use std::{
-    fs::{self, File},
-    io::{self, Error},
-};
-
-#[allow(dead_code)]
-// An interface for getting a file with the hash from `data` directory
-pub fn get_from_hash(hash: &str) -> Result<File, io::Error> {
-    let path = format!("./data/files/{}", &hash);
-    File::open(&path)
-}
+use std::{fs, io::Error};
 
 // An interface for removing files with their hash from `data` directory
-pub fn remove_file(hash: &str) -> Result<Result<(), Error>, &str> {
-    let path = format!("./data/files/{}", &hash);
+pub fn remove_file(
+    hash: &str,
+) -> Result<
+    Result<(), Error>,
+    // String error
+    &str,
+> {
+    let path = get_string_path(&["data", "files", hash]);
+    // Glob pattern for finding the file with the corresponding hash
     let pattern = format!("{}*", &path);
+
     // Getting the first entry from match list
     let entry = glob(&pattern)
         .expect("Failed to read glob pattern")
@@ -25,6 +24,7 @@ pub fn remove_file(hash: &str) -> Result<Result<(), Error>, &str> {
         .into_iter()
         .next();
 
+    // Entry exists
     if let Some(path) = entry {
         return Ok(fs::remove_file(&path.as_os_str()));
     }
@@ -42,7 +42,7 @@ pub fn write_file(bytes: &Bytes, mime: &Option<Type>) -> Result<String, Error> {
         .collect();
 
     // The output path of the files
-    let mut path = format!("./data/files/{}", &hash);
+    let mut path = get_string_path(&["data", "files", &hash]);
 
     if mime.is_some() {
         // Adding suffix to the file
@@ -51,6 +51,5 @@ pub fn write_file(bytes: &Bytes, mime: &Option<Type>) -> Result<String, Error> {
 
     // Creating the file
     fs::write(&path, &bytes)?;
-
     Ok(hash)
 }

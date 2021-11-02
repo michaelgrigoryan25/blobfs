@@ -2,13 +2,14 @@ use std::{env, fs::File, process::exit};
 
 use simplelog::{CombinedLogger, Config, TermLogger, WriteLogger};
 
+pub mod crypto;
 pub mod fsx;
 
-pub fn get_log_path() -> String {
+// For reading files from the `data` folder
+pub fn get_string_path(path_segments: &[&str]) -> String {
     let mut current_dir = env::current_dir().unwrap();
-    let log_path_segments = &["data", "logs", "stormi.log"];
 
-    for &segment in log_path_segments {
+    for &segment in path_segments {
         current_dir.push(segment);
     }
 
@@ -17,7 +18,7 @@ pub fn get_log_path() -> String {
 
 pub fn init_loggers() -> Result<(), log::SetLoggerError> {
     // The path of the log file
-    let log_path = get_log_path();
+    let log_path = get_string_path(&["data", "logs", "stormi.log"]);
 
     // Initializing the loggers
     CombinedLogger::init(vec![

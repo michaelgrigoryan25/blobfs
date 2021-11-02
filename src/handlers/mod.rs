@@ -1,11 +1,15 @@
 use serde::Serialize;
 
+pub mod not_found;
 pub mod remove;
 pub mod upload;
 
+// Response struct for all handlers
 #[derive(Serialize)]
 pub struct Response {
+    // Hashes that have been created, updated or deleted
     hashes: Vec<String>,
+    // Hashes that have been skipped due to some reasons
     skipped: Vec<String>,
 }
 
