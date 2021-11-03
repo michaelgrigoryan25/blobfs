@@ -31,9 +31,9 @@ pub fn decrypt(encrypted: Vec<u8>, private_key: &str) -> Vec<u8> {
 
 #[test]
 fn test_encrypt_decrypt() {
-    let encrypted = encrypt("hello".as_bytes().to_vec(), &read_key("public.pem"));
+    let encrypted = encrypt("hello".as_bytes().to_vec(), &read_key("test_public.pem"));
     assert_ne!("hello", String::from_utf8_lossy(&encrypted));
 
-    let decrypted = decrypt(encrypted, &read_key("private.pem"));
+    let decrypted = decrypt(encrypted, &read_key("test_private.pem"));
     assert_eq!("hello", String::from_utf8_lossy(&decrypted));
 }
