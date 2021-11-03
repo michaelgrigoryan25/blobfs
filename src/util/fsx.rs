@@ -1,18 +1,12 @@
 use crate::util::get_string_path;
 use axum::body::Bytes;
-use glob::glob;
+use glob::{glob, GlobError};
 use infer::Type;
 use rand::{distributions::Alphanumeric, Rng};
-use std::{fs, io::Error};
+use std::{fs, io::Error, path::PathBuf};
 
 // An interface for removing files with their hash from `data` directory
-pub fn remove_file(
-    hash: &str,
-) -> Result<
-    Result<(), Error>,
-    // String error
-    &str,
-> {
+pub fn remove_file(hash: &str) -> Result<Result<(), Error>, &str> {
     let path = get_string_path(&["data", "files", hash]);
     // Glob pattern for finding the file with the corresponding hash
     let pattern = format!("{}*", &path);
@@ -21,7 +15,6 @@ pub fn remove_file(
     let entry = glob(&pattern)
         .expect("Failed to read glob pattern")
         .flatten()
-        .into_iter()
         .next();
 
     // Entry exists
@@ -51,5 +44,28 @@ pub fn write_file(bytes: &Bytes, mime: &Option<Type>) -> Result<String, Error> {
 
     // Creating the file
     fs::write(&path, &bytes)?;
+
     Ok(hash)
+}
+
+// For getting a file from its hash
+pub fn get_from_hash(hash: &str) -> Result<(Vec<u8>, &str), Error> {
+    let hash_path = get_string_path(&["data", "files", &hash]);
+
+    // Matching paths
+    let path: Result<PathBuf, GlobError> = glob(&format!("{}.*", &hash_path))
+        .expect("Failed to read glob pattern")
+        .collect();
+
+    match &path {
+        Ok(path) => {
+            let bytes = fs::read(&path).unwrap();
+            let mime = infer::get(&bytes).unwrap().mime_type();
+            Ok((bytes, mime))
+        }
+        Err(error) => Err(Error::new(
+            std::io::ErrorKind::Other,
+            format!("{}", &error.error()),
+        )),
+    }
 }

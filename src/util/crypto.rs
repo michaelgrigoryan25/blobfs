@@ -6,27 +6,27 @@ use rsa::{
 };
 use std::fs;
 
+#[allow(dead_code)]
 // For reading a key from `keys` directory
 fn read_key(key_file: &str) -> String {
-    let path = get_string_path(&["data", "keys", &key_file]);
-    let file = fs::read_to_string(&path).expect("Key file cannot be read");
-    file
+    let path = get_string_path(&["data", "keys", key_file]);
+    fs::read_to_string(&path).expect("Key file cannot be read")
 }
 
+#[allow(dead_code)]
 // Encrypting raw text
 pub fn encrypt(content: Vec<u8>, public_key: &str) -> Vec<u8> {
-    let rsa = RsaPublicKey::from_public_key_pem(&public_key).unwrap();
+    let rsa = RsaPublicKey::from_public_key_pem(public_key).unwrap();
     let padding = PaddingScheme::new_oaep::<sha2::Sha256>();
-    let encrypted = rsa.encrypt(&mut OsRng, padding, &content).unwrap();
-    encrypted
+    rsa.encrypt(&mut OsRng, padding, &content).unwrap()
 }
 
+#[allow(dead_code)]
 // Decoding encrypted text
 pub fn decrypt(encrypted: Vec<u8>, private_key: &str) -> Vec<u8> {
-    let rsa = RsaPrivateKey::from_pkcs1_pem(&private_key).unwrap();
+    let rsa = RsaPrivateKey::from_pkcs1_pem(private_key).unwrap();
     let padding = PaddingScheme::new_oaep::<sha2::Sha256>();
-    let decrypted = rsa.decrypt(padding, &encrypted).unwrap();
-    decrypted
+    rsa.decrypt(padding, &encrypted).unwrap()
 }
 
 #[test]

@@ -4,14 +4,18 @@ extern crate log;
 extern crate axum_debug;
 
 use crate::{
-    handlers::{not_found, remove, upload},
+    handlers::{file, not_found, remove, upload},
     util::init_loggers,
 };
 use axum::{
-    handler::{delete, post, Handler},
+    handler::Handler,
+    routing::{any, delete, get, post},
     Router,
 };
+use hyper::StatusCode;
 use std::{env, process::exit};
+use tower::ServiceBuilder;
+use tower_http::trace::TraceLayer;
 
 mod handlers;
 mod util;
@@ -42,9 +46,17 @@ async fn main() {
 
     // Initializing the routes
     let stormi = Router::new()
+        .route("/:hash", get(file::handler))
+        // To not get random errors from `file::handler`
+        .route("/favicon.ico", any(|| async { StatusCode::NOT_FOUND }))
         .route("/upload", post(upload::handler))
         .route("/remove", delete(remove::handler))
-        .or(not_found::handler.into_service());
+        .fallback(not_found::handler.into_service())
+        .layer(
+            ServiceBuilder::new()
+                .layer(TraceLayer::new_for_http())
+                .into_inner(),
+        );
 
     let server = axum::Server::bind(&addr).serve(stormi.into_make_service());
 
