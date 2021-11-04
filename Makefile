@@ -1,11 +1,11 @@
 # This file was generated using the `makegen` cli tool
 .PHONY: run release clean
 
-run:
-	cargo run
-
 clean:
-	python ./scripts/clean.py
+	@python ./scripts/clean.py
 
-release:
-	cargo build --release --all-targets
+docker: docker-build
+	@docker run -d --name stormi -p 5346:6435 stormi
+
+docker-build:
+	@docker build . -t stormi

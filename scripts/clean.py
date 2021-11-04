@@ -1,7 +1,7 @@
 import os
 from glob import glob
 
-directories = ["data/files/*", "data/keys/*"]
+directories = ["data/files/*", "data/keys/[!test_*]*"]
 
 
 def main():
