@@ -1,7 +1,6 @@
-use crate::util::get_string_path;
+use crate::util::{get_string_path, partial_infer};
 use axum::body::Bytes;
 use glob::{glob, GlobError};
-use infer::Type;
 use rand::{distributions::Alphanumeric, Rng};
 use std::{fs, io::Error, path::PathBuf};
 
@@ -26,10 +25,11 @@ pub fn remove_file(hash: &str) -> Result<Result<(), Error>, &str> {
 }
 
 // An interface for creating files in `data` directory
-pub fn write_file(bytes: &Bytes, mime: &Option<Type>) -> Result<String, Error> {
+pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, Error> {
     // Generating a random alphanumerical hash
     let hash: String = rand::thread_rng()
         .sample_iter(&Alphanumeric)
+        // Default length for all hashes
         .take(24)
         .map(char::from)
         .collect();
@@ -37,9 +37,12 @@ pub fn write_file(bytes: &Bytes, mime: &Option<Type>) -> Result<String, Error> {
     // The output path of the files
     let mut path = get_string_path(&["data", "files", &hash]);
 
-    if mime.is_some() {
+    // TODO: Maybe rethink the way of handling this without causing performance drawbacks
+    // Getting extension from the mimetype
+    if mime.split('/').collect::<Vec<&str>>().get(1).is_some() {
         // Adding suffix to the file
-        path += &format!(".{}", &mime.unwrap().extension())
+        // E.g. ".exe"
+        path += &format!(".{}", &mime)
     }
 
     // Creating the file
@@ -49,8 +52,8 @@ pub fn write_file(bytes: &Bytes, mime: &Option<Type>) -> Result<String, Error> {
 }
 
 // For getting a file from its hash
-pub fn get_from_hash(hash: &str) -> Result<(Vec<u8>, &str), Error> {
-    let hash_path = get_string_path(&["data", "files", &hash]);
+pub fn get_from_hash(hash: &str) -> Result<(Vec<u8>, String), Error> {
+    let hash_path = get_string_path(&["data", "files", hash]);
 
     // Matching paths
     let path: Result<PathBuf, GlobError> = glob(&format!("{}.*", &hash_path))
@@ -59,13 +62,23 @@ pub fn get_from_hash(hash: &str) -> Result<(Vec<u8>, &str), Error> {
 
     match &path {
         Ok(path) => {
-            let bytes = fs::read(&path).unwrap();
-            let mime = infer::get(&bytes).unwrap().mime_type();
+            let bytes = fs::read(&path)?;
+            let mime = partial_infer(&bytes);
             Ok((bytes, mime))
         }
         Err(error) => Err(Error::new(
             std::io::ErrorKind::Other,
             format!("{}", &error.error()),
         )),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::util::fsx::get_from_hash;
+
+    #[test]
+    fn test_get_from_hash() {
+        assert!(get_from_hash("nonexistent").is_err())
     }
 }

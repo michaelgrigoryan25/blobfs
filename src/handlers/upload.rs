@@ -1,5 +1,5 @@
-use crate::handlers::Response;
 use crate::util::fsx;
+use crate::{handlers::Response, util::partial_infer};
 use axum::{extract::Multipart, http::StatusCode, Json};
 
 #[debug_handler]
@@ -13,10 +13,10 @@ pub async fn handler(multipart: Multipart) -> Result<Json<Response>, StatusCode>
     while let Some(field) = multipart.next_field().await.unwrap() {
         let name = field.name().unwrap().trim().to_string();
         let data = &field.bytes().await.unwrap();
-        let mime = infer::get(data);
+        let mime = partial_infer(&data);
 
         // If the mimetype of the file was predicted
-        if mime != None {
+        if !mime.is_empty() {
             // Writing the file to the disk
             match fsx::write_file(data, &mime) {
                 Ok(hash) => hashes.push(hash),
@@ -26,8 +26,7 @@ pub async fn handler(multipart: Multipart) -> Result<Json<Response>, StatusCode>
                     return Err(StatusCode::INTERNAL_SERVER_ERROR);
                 }
             };
-        }
-        else if name.is_empty() {
+        } else if name.is_empty() {
             skipped.push("[unnamed field]".to_string());
         } else {
             skipped.push(name)
