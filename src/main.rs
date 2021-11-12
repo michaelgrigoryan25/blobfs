@@ -43,6 +43,7 @@ async fn main() {
         // To not get random errors from `file::handler`
         .route("/favicon.ico", any(|| async { StatusCode::NOT_FOUND }))
         .route("/upload", post(upload::handler))
+        // TODO: Add authentication layer
         .route("/remove", delete(remove::handler))
         .fallback(not_found::handler.into_service())
         .layer(

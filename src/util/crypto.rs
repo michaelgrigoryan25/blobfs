@@ -8,7 +8,7 @@ use std::fs;
 
 #[allow(dead_code)]
 // For reading a key from `keys` directory
-fn read_key(key_file: &str) -> String {
+pub fn read_key(key_file: &str) -> String {
     let path = get_string_path(&["data", "keys", key_file]);
     fs::read_to_string(&path).expect("Key file cannot be read")
 }
