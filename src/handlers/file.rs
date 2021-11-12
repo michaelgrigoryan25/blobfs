@@ -13,7 +13,7 @@ pub async fn handler(Path(hash): Path<String>) -> Result<(HeaderMap, Vec<u8>), S
             Ok((headers, content))
         }
         Err(error) => {
-            error!("{}", &error);
+            eprintln!("{}", &error);
             Err(StatusCode::NOT_FOUND)
         }
     }

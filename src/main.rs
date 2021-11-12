@@ -1,12 +1,7 @@
 #[macro_use]
-extern crate log;
-#[macro_use]
 extern crate axum_debug;
 
-use crate::{
-    handlers::{file, not_found, remove, upload},
-    util::init_loggers,
-};
+use crate::handlers::{file, not_found, remove, upload};
 use axum::{
     handler::Handler,
     routing::{any, delete, get, post},
@@ -18,13 +13,11 @@ use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 
 mod handlers;
+mod middleware;
 mod util;
 
 #[tokio::main]
 async fn main() {
-    // Initializing the loggers
-    init_loggers().expect("Cannot initialize the loggers");
-
     // Getting a custom port from the environment or binding to the default one
     let port = match env::var("STORMI_PORT") {
         Ok(port) => port.parse::<u16>().unwrap_or_else(|_| {
@@ -32,7 +25,7 @@ async fn main() {
                 "`STORMI_PORT` should be a 16-bit unsigned integer. {} is out of range",
                 &port
             );
-            error!("{}", &message);
+            eprintln!("{}", &message);
             exit(1)
         }),
         _ => 6345,
@@ -40,7 +33,7 @@ async fn main() {
 
     // Parsing the address as a `SocketAddr` to use with server
     let addr = format!("127.0.0.1:{}", &port).parse().unwrap_or_else(|_| {
-        error!("Invalid `SocketAddr` was supplied");
+        eprintln!("Invalid `SocketAddr` was supplied");
         exit(1)
     });
 
@@ -60,9 +53,9 @@ async fn main() {
 
     let server = axum::Server::bind(&addr).serve(stormi.into_make_service());
 
-    info!("Stormi started at {}", &addr);
+    println!("Stormi started at {}", &addr);
 
     if let Err(error) = server.await {
-        error!("{}", &error);
+        eprintln!("{}", &error);
     }
 }

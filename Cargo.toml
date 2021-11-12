@@ -14,7 +14,6 @@ rand = "0.8.4"
 sha2 = "0.9.8"
 tower = "0.4.10"
 axum-debug = "0.1.0"
-simplelog = "0.10.2"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 hyper = { version = "0.14.14", features = ["full"] }

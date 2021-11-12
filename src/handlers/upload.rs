@@ -22,7 +22,7 @@ pub async fn handler(multipart: Multipart) -> Result<Json<Response>, StatusCode>
                 Ok(hash) => hashes.push(hash),
                 Err(error) => {
                     // Breaking on single error
-                    error!("{}", &error);
+                    eprintln!("{}", &error);
                     return Err(StatusCode::INTERNAL_SERVER_ERROR);
                 }
             };
