@@ -1,5 +1,5 @@
 # This file was generated using the `makegen` cli tool
-.PHONY: run release clean
+.PHONY: clean docker docker-build
 
 clean:
 	@python ./scripts/clean.py
