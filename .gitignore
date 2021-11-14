@@ -6,3 +6,5 @@ data/files/*
 data/keys/*
 !data/keys/.gitkeep
 !data/keys/test_*.pem
+
+config.yaml

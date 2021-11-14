@@ -37,12 +37,10 @@ pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, Error> {
     // The output path of the files
     let mut path = get_string_path(&["data", "files", &hash]);
 
-    // TODO: Maybe rethink the way of handling this without causing performance drawbacks
-    // Getting extension from the mimetype
-    if mime.split('/').collect::<Vec<&str>>().get(1).is_some() {
-        // Adding suffix to the file
-        // E.g. ".exe"
-        path += &format!(".{}", &mime)
+    // Getting the extension from the mime type if it exists
+    // and appending it to the file path
+    if let Some(value) = mime.split('/').nth(1) {
+        path += &format!(".{}", value);
     }
 
     // Creating the file
