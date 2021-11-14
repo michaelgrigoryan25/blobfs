@@ -64,4 +64,18 @@ and start it using:
 $ ./target/release/stormi
 ```
 
+## Docker
 
+You can also create a Stormi instance using Docker
+
+Pull the image:
+
+```docker
+docker pull ghcr.io/polygon-isecure/stormi:latest
+```
+
+Create an instance:
+
+```docker
+docker run -dp 6435:6435 --name stormi ghcr.io/polygon-isecure/stormi:latest
+```
