@@ -32,9 +32,10 @@ async fn main() {
     println!("{}", &ASCII_BANNER);
     println!("> Stormi is starting...");
 
+    // TODO: Move configuration logging logic to a separate non-async function
     let config = ConfigSingletonReader::singleton()
         .inner
-        .try_lock()
+        .lock()
         .expect("Thread failed to unwrap `ConfigSingletonReader`");
     if config.is_default_user {
         println!("> Configuration file `config.yaml` is invalid or does not exist");
@@ -49,6 +50,10 @@ async fn main() {
             &config.get_users().len()
         )
     }
+
+    // Dropping the variable so that other threads
+    // have no problems with accessing the singleton
+    drop(config);
 
     // Getting a custom port from the environment or binding to the default one
     let port = match env::var("STORMI_PORT") {

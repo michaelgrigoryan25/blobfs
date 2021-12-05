@@ -28,7 +28,7 @@ where
             // Reading config from singleton
             let config = ConfigSingletonReader::singleton()
                 .inner
-                .try_lock()
+                .lock()
                 .expect("Thread failed to unwrap `ConfigSingletonReader`");
             // Getting all users
             let users = &config.get_users();
