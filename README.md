@@ -1,6 +1,6 @@
 # stormi
 
-Stormi is a fast and simple file-server with public/private key authentication
+Stormi is a fast and simple, hash-based file-server written in Rust
 
 ## How does it work?
 
