@@ -1,7 +1,7 @@
 use std::env;
 
-pub mod crypto;
 pub mod fsx;
+pub mod config;
 
 // For reading files from the `data` folder
 pub fn get_string_path(path_segments: &[&str]) -> String {

@@ -39,7 +39,7 @@ pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, Error> {
 
     // Getting the extension from the mime type if it exists
     // and appending it to the file path
-    if let Some(value) = mime.split('/').nth(1) {
+    if let Some(value) = mime.split_whitespace().nth(1) {
         path += &format!(".{}", value);
     }
 

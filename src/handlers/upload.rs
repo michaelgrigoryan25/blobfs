@@ -3,8 +3,7 @@ use crate::{handlers::Response, util::partial_infer};
 use axum::{extract::Multipart, http::StatusCode, Json};
 
 #[debug_handler]
-pub async fn handler(multipart: Multipart) -> Result<Json<Response>, StatusCode> {
-    let mut multipart = multipart;
+pub async fn handler(mut multipart: Multipart) -> Result<Json<Response>, StatusCode> {
     let mut hashes: Vec<String> = vec![];
     // Vector for keeping hashes that were skipped for some reason
     let mut skipped: Vec<String> = vec![];

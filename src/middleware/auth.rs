@@ -1,58 +1,61 @@
+use crate::util::config::{ConfigSingletonReader, ConfigTrait};
 use async_trait::async_trait;
-use axum::{
-    extract::{FromRequest, RequestParts},
-    http::{self, StatusCode},
-};
-use serde::Deserialize;
-use std::{fs, process::exit};
+use axum::extract::{FromRequest, RequestParts};
+use hyper::StatusCode;
 
-static mut MASTER_KEY: &str = "";
-
-#[derive(Deserialize, Clone)]
-struct Config {
-    key: String,
-}
-
-// An extractor that performs authorization.
-pub struct Authorization;
+#[derive(Debug, Clone, Copy)]
+pub struct Authentication;
 
 #[async_trait]
-impl<B> FromRequest<B> for Authorization
+impl<B> FromRequest<B> for Authentication
 where
     B: Send,
 {
     type Rejection = StatusCode;
 
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+        // Getting the authorization header
         let authorization = &req
             .headers()
-            .and_then(|headers| headers.get(http::header::AUTHORIZATION))
-            .and_then(|value| value.to_str().ok());
+            .expect("Cannot get headers")
+            .get("Authorization");
 
-        unsafe {
-            if MASTER_KEY.is_empty() {
-                let yaml = fs::read_to_string("config.yaml").unwrap_or_else(|_| {
-                    println!("`config.yaml` was not supplied");
-                    exit(1);
-                });
+        // Validating the header
+        if let Some(authorization) = authorization {
+            let bytes = base64::decode(&authorization).unwrap();
+            let decoded = String::from_utf8_lossy(&bytes);
 
-                let config = serde_yaml::from_str::<Config>(&yaml).unwrap_or_else(|_| {
-                    println!("`key` in `config.yaml` was not supplied");
-                    exit(1);
-                });
+            // Reading config from singleton
+            let config = ConfigSingletonReader::singleton()
+                .inner
+                .try_lock()
+                .expect("Thread failed to unwrap `ConfigSingletonReader`");
+            // Getting all users
+            let users = &config.get_users();
 
-                let key = Box::leak(config.key.into_boxed_str());
+            // Splitting the base64 decoded string and getting the username and password from it
+            let mut decoded_split = decoded.split(':');
+            let username = &decoded_split.next();
+            let password = &decoded_split.next();
 
-                MASTER_KEY = &*key;
-            }
+            if let (Some(username), Some(password)) = (*username, *password) {
+                // Checking whether the user is valid
+                let user = users
+                    .iter()
+                    .find(|it| it.username == username && it.password == password);
 
-            if let Some(value) = &authorization {
-                if *value == MASTER_KEY {
-                    return Ok(Self);
+                // TODO: Map the value from `user` to the actual route from the request
+                // More info: https://docs.rs/axum/latest/axum/#commonly-used-middleware
+                if let Some(_) = user {
+                    Ok(Self)
+                } else {
+                    Err(StatusCode::UNAUTHORIZED)
                 }
+            } else {
+                Err(StatusCode::UNAUTHORIZED)
             }
+        } else {
+            Err(StatusCode::UNAUTHORIZED)
         }
-
-        Err(StatusCode::UNAUTHORIZED)
     }
 }

@@ -3,7 +3,8 @@ extern crate axum_debug;
 
 use crate::{
     handlers::{file, not_found, remove, upload},
-    middleware::auth::Authorization,
+    middleware::auth::Authentication,
+    util::config::{ConfigSingletonReader, ConfigTrait, DEFAULT_PERMISSIONS, DEFAULT_USERNAME},
 };
 use axum::{
     extract::extractor_middleware,
@@ -18,7 +19,7 @@ mod handlers;
 mod middleware;
 mod util;
 
-static ASCII_BANNER: &str = r#"
+const ASCII_BANNER: &str = r#"
  ______     ______   ______     ______     __    __     __
 /\  ___\   /\__  _\ /\  __ \   /\  == \   /\ "-./  \   /\ \
 \ \___  \  \/_/\ \/ \ \ \/\ \  \ \  __<   \ \ \-./\ \  \ \ \
@@ -30,6 +31,24 @@ static ASCII_BANNER: &str = r#"
 async fn main() {
     println!("{}", &ASCII_BANNER);
     println!("> Stormi is starting...");
+
+    let config = ConfigSingletonReader::singleton()
+        .inner
+        .try_lock()
+        .expect("Thread failed to unwrap `ConfigSingletonReader`");
+    if config.is_default_user {
+        println!("> Configuration file `config.yaml` is invalid or does not exist");
+        println!("..This is highly insecure. Please consider adding valid configuration");
+        println!(
+            "..Defaulting to user `{}` with default permissions: {:?}",
+            &DEFAULT_USERNAME, &DEFAULT_PERMISSIONS
+        );
+    } else {
+        println!(
+            "> Configuration loaded. Detected {} user(s)",
+            &config.get_users().len()
+        )
+    }
 
     // Getting a custom port from the environment or binding to the default one
     let port = match env::var("STORMI_PORT") {
@@ -55,15 +74,15 @@ async fn main() {
         // To not get random errors from `file::handler`
         .route("/favicon.ico", any(|| async { StatusCode::NOT_FOUND }))
         .route("/upload", post(upload::handler))
-        .route_layer(extractor_middleware::<Authorization>())
+        .route_layer(extractor_middleware::<Authentication>())
         // TODO: Add authentication layer
         .route("/remove", delete(remove::handler))
+        .route_layer(extractor_middleware::<Authentication>())
         .fallback(not_found::handler.into_service());
 
     let server = axum::Server::bind(&addr).serve(stormi.into_make_service());
 
     println!("> Stormi started at {}", &addr);
-
     if let Err(error) = server.await {
         eprintln!("{}", &error);
     }
