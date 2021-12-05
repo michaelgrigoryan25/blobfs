@@ -1,6 +1,6 @@
 # stormi
 
-Stormi is a fast and simple file-server with public/private key authentication
+Stormi is a fast and simple, hash-based file-server written in Rust
 
 ## How does it work?
 
@@ -43,6 +43,12 @@ Response structure of `/upload` and `/remove` is the same:
 
 - `hashes` - the hashes that have been added, modified or removed
 - `skipped` - the hases that have been skipped
+
+## Wrappers
+
+Here is a list of different wrapper implementations around the Stormi API
+
+- [TypeScript](https://github.com/polygon-isecure/stormi.ts)
 
 ## Configuring and running Stormi
 

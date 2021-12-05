@@ -1,1 +1,6 @@
-key: "something random"
+users:
+  - username: "test"
+    password: "test-p0ssw0rd"
+    permissions:
+      - "READ"
+      - "WRITE"
