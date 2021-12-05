@@ -20,11 +20,7 @@ Stormi has 3 endpoints:
 
 ```json
 {
-  "hashes": [
-    "hash1",
-    "hash2",
-    "hash3"
-  ]
+  "hashes": ["hash1", "hash2", "hash3"]
 }
 ```
 
@@ -70,7 +66,7 @@ and start it using:
 $ ./target/release/stormi
 ```
 
-## Docker
+### With Docker
 
 You can also create a Stormi instance using Docker
 
@@ -84,4 +80,12 @@ Create an instance:
 
 ```docker
 docker run -dp 6435:6435 --name stormi ghcr.io/polygon-isecure/stormi:latest
+```
+
+### Send a test request using `curl`
+
+Create a **base64 encoded** string with your credentials in the following format: `username:password`, replace `credentials` with the output and change `file.png` to the filename you want to upload.
+
+```shell
+$ curl -X POST --form file='file.png' http://127.0.0.1:6345/upload -H 'Authorization: credentials'
 ```

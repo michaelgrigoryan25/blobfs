@@ -1,11 +1,4 @@
-/target
+target
 
 data/files/*
 !data/files/.gitkeep
-
-data/logs/*
-!data/logs/.gitkeep
-
-data/keys/*
-!data/keys/.gitkeep
-!data/keys/test_*.pem
