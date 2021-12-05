@@ -44,6 +44,12 @@ Response structure of `/upload` and `/remove` is the same:
 - `hashes` - the hashes that have been added, modified or removed
 - `skipped` - the hases that have been skipped
 
+## Wrappers
+
+Here is a list of different wrapper implementations around the Stormi API
+
+- [TypeScript](https://github.com/polygon-isecure/stormi.ts)
+
 ## Configuring and running Stormi
 
 To configure Stormi, you will need to create a `config.yaml` file and add a `key` value, which will be the secret "token" to access Stormi.
