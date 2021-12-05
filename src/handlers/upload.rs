@@ -11,17 +11,15 @@ pub async fn handler(mut multipart: Multipart) -> Result<Json<Response>, StatusC
     // Looping through all fields
     while let Some(field) = multipart.next_field().await.unwrap() {
         let name = field.name().unwrap().trim().to_string();
-        let data = &field.bytes().await.unwrap();
+        let data = field.bytes().await.unwrap();
         let mime = partial_infer(&data);
 
         // If the mimetype of the file was predicted
         if !mime.is_empty() {
             // Writing the file to the disk
-            match fsx::write_file(data, &mime) {
+            match fsx::write_file(&data, &mime) {
                 Ok(hash) => hashes.push(hash),
-                Err(error) => {
-                    // Breaking on single error
-                    eprintln!("{}", &error);
+                _ => {
                     return Err(StatusCode::INTERNAL_SERVER_ERROR);
                 }
             };

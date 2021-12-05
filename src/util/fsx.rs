@@ -8,7 +8,7 @@ use std::{fs, io::Error, path::PathBuf};
 pub fn remove_file(hash: &str) -> Result<Result<(), Error>, &str> {
     let path = get_string_path(&["data", "files", hash]);
     // Glob pattern for finding the file with the corresponding hash
-    let pattern = format!("{}*", &path);
+    let pattern = format!("{}*", path);
 
     // Getting the first entry from match list
     let entry = glob(&pattern)
@@ -18,7 +18,7 @@ pub fn remove_file(hash: &str) -> Result<Result<(), Error>, &str> {
 
     // Entry exists
     if let Some(path) = entry {
-        return Ok(fs::remove_file(&path.as_os_str()));
+        return Ok(fs::remove_file(path.as_os_str()));
     }
 
     Err("File could not be found")
@@ -28,7 +28,7 @@ pub fn remove_file(hash: &str) -> Result<Result<(), Error>, &str> {
 pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, Error> {
     // Generating a random alphanumerical hash
     let hash: String = rand::thread_rng()
-        .sample_iter(&Alphanumeric)
+        .sample_iter(Alphanumeric)
         // Default length for all hashes
         .take(24)
         .map(char::from)
@@ -39,12 +39,12 @@ pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, Error> {
 
     // Getting the extension from the mime type if it exists
     // and appending it to the file path
-    if let Some(value) = mime.split_whitespace().nth(1) {
+    if let Some(value) = mime.split('/').nth(1) {
         path += &format!(".{}", value);
     }
 
     // Creating the file
-    fs::write(&path, &bytes)?;
+    fs::write(path, bytes)?;
 
     Ok(hash)
 }
@@ -54,19 +54,19 @@ pub fn get_from_hash(hash: &str) -> Result<(Vec<u8>, String), Error> {
     let hash_path = get_string_path(&["data", "files", hash]);
 
     // Matching paths
-    let path: Result<PathBuf, GlobError> = glob(&format!("{}.*", &hash_path))
+    let path: Result<PathBuf, GlobError> = glob(&format!("{}.*", hash_path))
         .expect("Failed to read glob pattern")
         .collect();
 
     match &path {
         Ok(path) => {
-            let bytes = fs::read(&path)?;
+            let bytes = fs::read(path)?;
             let mime = partial_infer(&bytes);
             Ok((bytes, mime))
         }
         Err(error) => Err(Error::new(
             std::io::ErrorKind::Other,
-            format!("{}", &error.error()),
+            format!("{}", error.error()),
         )),
     }
 }

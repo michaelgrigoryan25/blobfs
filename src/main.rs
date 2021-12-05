@@ -4,7 +4,7 @@ extern crate axum_debug;
 use crate::{
     handlers::{file, not_found, remove, upload},
     middleware::auth::Authentication,
-    util::config::{ConfigSingletonReader, ConfigTrait, DEFAULT_PERMISSIONS, DEFAULT_USERNAME},
+    util::config::Config,
 };
 use axum::{
     extract::extractor_middleware,
@@ -29,38 +29,18 @@ const ASCII_BANNER: &str = r#"
 
 #[tokio::main]
 async fn main() {
-    println!("{}", &ASCII_BANNER);
+    println!("{}", ASCII_BANNER);
     println!("> Stormi is starting...");
 
-    // TODO: Move configuration logging logic to a separate non-async function
-    let config = ConfigSingletonReader::singleton()
-        .inner
-        .lock()
-        .expect("Thread failed to unwrap `ConfigSingletonReader`");
-    if config.is_default_user {
-        println!("> Configuration file `config.yaml` is invalid or does not exist");
-        println!("..This is highly insecure. Please consider adding valid configuration");
-        println!(
-            "..Defaulting to user `{}` with default permissions: {:?}",
-            &DEFAULT_USERNAME, &DEFAULT_PERMISSIONS
-        );
-    } else {
-        println!(
-            "> Configuration loaded. Detected {} user(s)",
-            &config.get_users().len()
-        )
-    }
-
-    // Dropping the variable so that other threads
-    // have no problems with accessing the singleton
-    drop(config);
+    // Loading the configuration and logging information
+    Config::init();
 
     // Getting a custom port from the environment or binding to the default one
     let port = match env::var("STORMI_PORT") {
         Ok(port) => port.parse::<u16>().unwrap_or_else(|_| {
             eprintln!(
                 "`STORMI_PORT` should be a 16-bit unsigned integer. {} is out of range",
-                &port
+                port
             );
             exit(1)
         }),
@@ -68,7 +48,7 @@ async fn main() {
     };
 
     // Parsing the address as a `SocketAddr` to use with server
-    let addr = format!("127.0.0.1:{}", &port).parse().unwrap_or_else(|_| {
+    let addr = format!("127.0.0.1:{}", port).parse().unwrap_or_else(|_| {
         eprintln!("Invalid `SocketAddr` was supplied");
         exit(1)
     });
@@ -87,7 +67,7 @@ async fn main() {
 
     let server = axum::Server::bind(&addr).serve(stormi.into_make_service());
 
-    println!("> Stormi started at {}", &addr);
+    println!("> Stormi started at {}", addr);
     if let Err(error) = server.await {
         eprintln!("{}", &error);
     }

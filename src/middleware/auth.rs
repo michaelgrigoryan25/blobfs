@@ -30,8 +30,6 @@ where
                 .inner
                 .lock()
                 .expect("Thread failed to unwrap `ConfigSingletonReader`");
-            // Getting all users
-            let users = &config.get_users();
 
             // Splitting the base64 decoded string and getting the username and password from it
             let mut decoded_split = decoded.split(':');
@@ -40,9 +38,7 @@ where
 
             if let (Some(username), Some(password)) = (*username, *password) {
                 // Checking whether the user is valid
-                let user = users
-                    .iter()
-                    .find(|it| it.username == username && it.password == password);
+                let user = &config.verify_user(username, password);
 
                 // TODO: Map the value from `user` to the actual route from the request
                 // More info: https://docs.rs/axum/latest/axum/#commonly-used-middleware
