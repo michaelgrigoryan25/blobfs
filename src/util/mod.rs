@@ -1,7 +1,7 @@
 use std::env;
 
-pub mod fsx;
 pub mod config;
+pub mod fsx;
 
 // For reading files from the `data` folder
 pub fn get_string_path(path_segments: &[&str]) -> String {
