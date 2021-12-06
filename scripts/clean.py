@@ -1,11 +1,11 @@
 import os
 from glob import glob
 
-directories = ["data/files/*", "data/keys/[!test_*]*"]
+DIRECTORIES = ["data/files/*"]
 
 
 def main():
-    for directory in directories:
+    for directory in DIRECTORIES:
         for file in glob(directory):
             print(f"Removed: {file}")
             os.unlink(file)
