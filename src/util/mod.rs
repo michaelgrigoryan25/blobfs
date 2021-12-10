@@ -1,5 +1,7 @@
 use std::env;
 
+use self::config::{Permission, User};
+
 pub mod config;
 pub mod fsx;
 
@@ -12,6 +14,14 @@ pub fn get_string_path(path_segments: &[&str]) -> String {
     }
 
     current_dir.to_string_lossy().to_string()
+}
+
+// For checking whether a user has the specified permission
+pub fn has_permission(user: &User, permission: Permission) -> bool {
+    user.permissions
+        .iter()
+        .find(|&&it| it == permission)
+        .is_some()
 }
 
 // This line infers file's mimetype without reading it completely

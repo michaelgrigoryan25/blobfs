@@ -1,3 +1,6 @@
+use crate::middleware::auth::AuthError;
+use async_trait::async_trait;
+use axum::extract::{FromRequest, RequestParts};
 use serde::Deserialize;
 use std::{
     mem::MaybeUninit,
@@ -9,7 +12,7 @@ const DEFAULT_PASSWORD: &str = "stormi-admin";
 pub const DEFAULT_PERMISSIONS: &[Permission] = &[Permission::Read, Permission::Write];
 
 // An enum for controlling the permissions of users
-#[derive(Debug, Clone, Copy, Deserialize)]
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq)]
 pub enum Permission {
     #[serde(rename = "READ")]
     Read,
@@ -80,6 +83,54 @@ impl User {
             password: DEFAULT_PASSWORD.to_string(),
             permissions: DEFAULT_PERMISSIONS.to_vec(),
         }
+    }
+}
+
+// TODO: Move the implementation logic with the user elsewhere
+#[async_trait]
+impl<B> FromRequest<B> for User
+where
+    B: Send,
+{
+    type Rejection = AuthError;
+
+    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+        let authorization = req
+            .headers()
+            .expect("Cannot get headers")
+            .get("authorization");
+
+        if let Some(authorization) = authorization {
+            let bytes = base64::decode(&authorization).unwrap();
+            let decoded = String::from_utf8_lossy(&bytes);
+
+            // Reading config from singleton
+            let config = ConfigSingletonReader::singleton()
+                .inner
+                .lock()
+                .expect("Thread failed to unwrap `ConfigSingletonReader`");
+
+            // Splitting the base64 decoded string and getting the username and password from it
+            let mut decoded_split = decoded.split(':');
+            let username = &decoded_split.next();
+            let password = &decoded_split.next();
+
+            if let (Some(username), Some(password)) = (*username, *password) {
+                // Checking whether the user is valid
+                let user = config.verify_user(username, password);
+
+                // Checking whether the user is valid
+                if let Some(user) = user {
+                    return Ok(user.clone().to_owned());
+                }
+
+                return Err(AuthError::UserNotFound);
+            }
+
+            return Err(AuthError::BadCredentials);
+        }
+
+        return Err(AuthError::MissingAuthorizationHeader);
     }
 }
 
