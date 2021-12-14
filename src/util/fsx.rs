@@ -37,13 +37,15 @@ pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, Error> {
     // The output path of the files
     let mut path = get_string_path(&["data", "files", &hash]);
 
-    // Getting the extension from the mime type if it exists
-    // and appending it to the file path
+    // Getting the extension from the mime type if
+    // it exists and appending it to the file path
     if let Some(value) = mime.split('/').nth(1) {
         path += &format!(".{}", value);
+    } else {
+        // Defaulting to a text file if the mime time cannot be determined
+        path += ".txt"
     }
 
-    // Creating the file
     fs::write(path, bytes)?;
 
     Ok(hash)

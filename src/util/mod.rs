@@ -1,6 +1,5 @@
-use std::env;
-
 use self::config::{Permission, User};
+use std::env;
 
 pub mod config;
 pub mod fsx;
@@ -8,20 +7,13 @@ pub mod fsx;
 // For reading files from the `data` folder
 pub fn get_string_path(path_segments: &[&str]) -> String {
     let mut current_dir = env::current_dir().unwrap();
-
-    for &segment in path_segments {
-        current_dir.push(segment);
-    }
-
+    path_segments.iter().for_each(|it| current_dir.push(it));
     current_dir.to_string_lossy().to_string()
 }
 
 // For checking whether a user has the specified permission
 pub fn has_permission(user: &User, permission: Permission) -> bool {
-    user.permissions
-        .iter()
-        .find(|&&it| it == permission)
-        .is_some()
+    user.permissions.iter().any(|&it| it == permission)
 }
 
 // This line infers file's mimetype without reading it completely

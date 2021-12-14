@@ -17,10 +17,10 @@ pub async fn handler(user: User, mut multipart: Multipart) -> Result<Json<Respon
 
             // If the mimetype of the file was predicted
             if !mime.is_empty() {
-                // Writing the file to the disk
                 match fsx::write_file(&data, &mime) {
                     Ok(hash) => hashes.push(hash),
                     _ => {
+                        // Immediately returning an error
                         return Err(StatusCode::INTERNAL_SERVER_ERROR);
                     }
                 };
@@ -31,8 +31,8 @@ pub async fn handler(user: User, mut multipart: Multipart) -> Result<Json<Respon
             }
         }
 
-        // Sending a JSON response
-        Ok(Json::from(Response::new(hashes, skipped)))
+        let response = Json::from(Response::new(hashes, skipped));
+        Ok(response)
     } else {
         Err(StatusCode::FORBIDDEN)
     }

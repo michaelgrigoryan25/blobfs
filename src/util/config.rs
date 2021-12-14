@@ -121,7 +121,7 @@ where
 
                 // Checking whether the user is valid
                 if let Some(user) = user {
-                    return Ok(user.clone().to_owned());
+                    return Ok(user.clone());
                 }
 
                 return Err(AuthError::UserNotFound);
