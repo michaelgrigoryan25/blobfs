@@ -2,9 +2,9 @@ use axum::response::IntoResponse;
 use hyper::StatusCode;
 
 // Authentication errors
-static ERR_USER_NOT_FOUND: &str = "User was not found";
-static ERR_INVALID_CREDENTIALS: &str = "Invalid credentials";
-static ERR_MISSING_HEADER: &str = "`Authorization` header is missing from the request";
+const ERR_USER_NOT_FOUND: &str = "User was not found";
+const ERR_INVALID_CREDENTIALS: &str = "Invalid credentials";
+const ERR_MISSING_HEADER: &str = "`Authorization` header is missing from the request";
 
 #[derive(Debug)]
 pub enum AuthError {
