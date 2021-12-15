@@ -2,11 +2,10 @@
 extern crate axum_debug;
 
 use crate::{
-    handlers::{file, not_found, remove, upload},
+    handlers::{file, remove, upload},
     util::config::Config,
 };
 use axum::{
-    handler::Handler,
     routing::{any, delete, get, post},
     Router,
 };
@@ -53,14 +52,14 @@ async fn main() {
 
     // Initializing the routes
     let stormi = Router::new()
-        .route("/:hash", get(file::handler))
         // To not get random errors from `file::handler`
         .route("/favicon.ico", any(|| async { StatusCode::NOT_FOUND }))
+        .route("/:hash", get(file::handler))
         .route("/upload", post(upload::handler))
         // TODO: Add authentication layer
         .route("/remove", delete(remove::handler))
-        .fallback(not_found::handler.into_service());
-
+        // .fallback(not_found::handler.into_service());
+;
     let server = axum::Server::bind(&addr).serve(stormi.into_make_service());
 
     println!("> Stormi started at {}", addr);

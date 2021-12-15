@@ -1,7 +1,6 @@
 use serde::Serialize;
 
 pub mod file;
-pub mod not_found;
 pub mod remove;
 pub mod upload;
 

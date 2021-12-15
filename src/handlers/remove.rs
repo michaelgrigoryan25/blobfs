@@ -31,17 +31,13 @@ pub async fn handler(user: User, form: Json<Remove>) -> Result<Json<Response>, S
             if hash.len() != 24 {
                 skipped.push(hash.to_string());
             } else {
-                // Removing the file by hash
-                if fsx::remove_file(hash).is_ok() {
-                    removed.push(hash.clone());
-                } else {
-                    skipped.push(hash.to_string());
-                }
+                fsx::remove_file(hash);
+                removed.push(hash.clone());
             }
         }
 
-        // Sending a JSON response
-        Ok(Json::from(Response::new(removed, skipped)))
+        let response = Json::from(Response::new(removed, skipped));
+        Ok(response)
     } else {
         // User does not have the `Write` permission
         Err(StatusCode::FORBIDDEN)

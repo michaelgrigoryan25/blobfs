@@ -4,24 +4,16 @@ use glob::{glob, GlobError};
 use rand::{distributions::Alphanumeric, Rng};
 use std::{fs, io::Error, path::PathBuf};
 
+const TXT_EXTENSION: &str = ".txt";
+
 // An interface for removing files with their hash from `data` directory
-pub fn remove_file(hash: &str) -> Result<Result<(), Error>, &str> {
+pub fn remove_file(hash: &str) {
     let path = get_string_path(&["data", "files", hash]);
-    // Glob pattern for finding the file with the corresponding hash
-    let pattern = format!("{}*", path);
 
-    // Getting the first entry from match list
-    let entry = glob(&pattern)
-        .expect("Failed to read glob pattern")
-        .flatten()
-        .next();
-
-    // Entry exists
-    if let Some(path) = entry {
-        return Ok(fs::remove_file(path.as_os_str()));
-    }
-
-    Err("File could not be found")
+    // We are skipping the part of checking whether the file exists or not.
+    // Instead the result is always void. If the file exists, remove it, if not there is no need for additional handling.
+    // This will partially improve the performance. Since we don't need to check whether the file exists, we save some time and are able to send the response faster.
+    let _ = fs::remove_file(path);
 }
 
 // An interface for creating files in `data` directory
@@ -43,10 +35,10 @@ pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, Error> {
         path += &format!(".{}", value);
     } else {
         // Defaulting to a text file if the mime time cannot be determined
-        path += ".txt"
+        path += TXT_EXTENSION;
     }
 
-    fs::write(path, bytes)?;
+    fs::write(&path, bytes)?;
 
     Ok(hash)
 }
@@ -76,9 +68,10 @@ pub fn get_from_hash(hash: &str) -> Result<(Vec<u8>, String), Error> {
 #[cfg(test)]
 mod tests {
     use crate::util::fsx::get_from_hash;
+    const NONEXISTENT_FILENAME: &str = "nonexistent";
 
     #[test]
     fn test_get_from_hash() {
-        assert!(get_from_hash("nonexistent").is_err())
+        assert!(get_from_hash(NONEXISTENT_FILENAME).is_err())
     }
 }
