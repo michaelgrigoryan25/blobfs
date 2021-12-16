@@ -2,11 +2,11 @@ use crate::util::{get_string_path, partial_infer};
 use axum::body::Bytes;
 use glob::{glob, GlobError};
 use rand::{distributions::Alphanumeric, Rng};
-use std::{fs, io::Error, path::PathBuf};
+use std::{fs, path::PathBuf};
 
 const TXT_EXTENSION: &str = ".txt";
 
-// An interface for removing files with their hash from `data` directory
+/// An interface for removing files with their hash from `data` directory
 pub fn remove_file(hash: &str) {
     let path = get_string_path(&["data", "files", hash]);
 
@@ -16,8 +16,8 @@ pub fn remove_file(hash: &str) {
     let _ = fs::remove_file(path);
 }
 
-// An interface for creating files in `data` directory
-pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, Error> {
+/// An interface for creating files in `data` directory
+pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, std::io::Error> {
     // Generating a random alphanumerical hash
     let hash: String = rand::thread_rng()
         .sample_iter(Alphanumeric)
@@ -43,26 +43,13 @@ pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, Error> {
     Ok(hash)
 }
 
-// For getting a file from its hash
-pub fn get_from_hash(hash: &str) -> Result<(Vec<u8>, String), Error> {
+/// For finding and reading a file with its hash
+pub fn get_from_hash(hash: &str) -> Result<(Vec<u8>, String), Box<dyn std::error::Error>> {
     let hash_path = get_string_path(&["data", "files", hash]);
-
-    // Matching paths
-    let path: Result<PathBuf, GlobError> = glob(&format!("{}.*", hash_path))
-        .expect("Failed to read glob pattern")
-        .collect();
-
-    match &path {
-        Ok(path) => {
-            let bytes = fs::read(path)?;
-            let mime = partial_infer(&bytes);
-            Ok((bytes, mime))
-        }
-        Err(error) => Err(Error::new(
-            std::io::ErrorKind::Other,
-            format!("{}", error.error()),
-        )),
-    }
+    let path: Result<PathBuf, GlobError> = glob(&format!("{}.*", hash_path))?.collect();
+    let bytes = fs::read(path.unwrap())?;
+    let mime = partial_infer(&bytes);
+    Ok((bytes, mime))
 }
 
 #[cfg(test)]

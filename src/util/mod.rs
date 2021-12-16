@@ -18,7 +18,8 @@ pub fn has_permission(user: &User, permission: Permission) -> bool {
 
 // This line infers file's mimetype without reading it completely
 // Instead it reads the file to the point where the mime type can be inferred
-// Here is the equivalent logic
+// Here is equivalent logic:
+//
 // {
 //     let mut tmp: Vec<u8> = vec![];
 //     for byte in &bytes {
@@ -51,8 +52,10 @@ where
 mod tests {
     use crate::util::partial_infer;
 
+    const BYTES: &[u8] = &[0xFF, 0xD8, 0xFF, 0xAA];
+
     #[test]
     fn test_partial_infer() {
-        assert_eq!("image/jpeg", partial_infer([0xFF, 0xD8, 0xFF, 0xAA]));
+        assert_eq!("image/jpeg", partial_infer(BYTES));
     }
 }
