@@ -57,9 +57,8 @@ async fn main() {
         .route("/:hash", get(file::handler))
         .route("/upload", post(upload::handler))
         // TODO: Add authentication layer
-        .route("/remove", delete(remove::handler))
-        // .fallback(not_found::handler.into_service());
-;
+        .route("/remove", delete(remove::handler));
+
     let server = axum::Server::bind(&addr).serve(stormi.into_make_service());
 
     println!("> Stormi started at {}", addr);

@@ -39,6 +39,7 @@ pub fn partial_infer<T>(bytes: T) -> String
 where
     T: AsRef<[u8]>,
 {
+    #[inline]
     fn inner(bytes: &[u8]) -> String {
         (0..bytes.len())
             .find_map(|end| Some(infer::get(&bytes[..end])?.mime_type().to_string()))
