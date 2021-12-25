@@ -16,6 +16,7 @@ mod handlers;
 mod middleware;
 mod util;
 
+/// ASCII text that will be printed on Stormi's startup
 const ASCII_BANNER: &str = r#"
  ______     ______   ______     ______     __    __     __
 /\  ___\   /\__  _\ /\  __ \   /\  == \   /\ "-./  \   /\ \

@@ -6,7 +6,7 @@ use std::{fs, path::PathBuf};
 
 const TXT_EXTENSION: &str = ".txt";
 
-/// An interface for removing files with their hash from `data` directory
+/// For removing files with their hash from `data` directory
 pub fn remove_file(hash: &str) {
     let path = get_string_path(&["data", "files", hash]);
 
@@ -16,7 +16,7 @@ pub fn remove_file(hash: &str) {
     let _ = fs::remove_file(path);
 }
 
-/// An interface for creating files in `data` directory
+/// For creating files in `data` directory
 pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, std::io::Error> {
     // Generating a random alphanumerical hash
     let hash: String = rand::thread_rng()
@@ -55,6 +55,7 @@ pub fn get_from_hash(hash: &str) -> Result<(Vec<u8>, String), Box<dyn std::error
 #[cfg(test)]
 mod tests {
     use crate::util::fsx::get_from_hash;
+
     const NONEXISTENT_FILENAME: &str = "nonexistent";
 
     #[test]

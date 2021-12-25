@@ -4,29 +4,32 @@ use axum::extract::{FromRequest, RequestParts};
 use serde::Deserialize;
 use std::{
     mem::MaybeUninit,
-    sync::{Arc, Mutex, Once},
+    sync::{Mutex, Once},
 };
 
 pub const DEFAULT_USERNAME: &str = "stormi";
 const DEFAULT_PASSWORD: &str = "stormi-admin";
 pub const DEFAULT_PERMISSIONS: &[Permission] = &[Permission::Read, Permission::Write];
 
-// An enum for controlling the permissions of users
+/// An enum for controlling the permissions of users
 #[derive(Debug, Clone, Copy, Deserialize, PartialEq)]
 pub enum Permission {
-    #[serde(rename = "READ")]
+    /// Permission for reading files
+    #[serde(alias = "Read", alias = "READ", alias = "R", alias = "r")]
     Read,
-    #[serde(rename = "WRITE")]
+    /// Permission for creating, updating and deleting files
+    #[serde(alias = "Write", alias = "WRITE", alias = "W", alias = "w")]
     Write,
 }
 
-// A singleton for loading the configuration once and reading from it
+/// A singleton for loading the configuration once and reading from it
 #[derive(Debug)]
 pub struct ConfigSingletonReader {
     pub inner: Mutex<Config>,
 }
 
 impl ConfigSingletonReader {
+    /// A method for initializing and getting `ConfigSingletonReader`
     pub fn singleton() -> &'static ConfigSingletonReader {
         static ONCE: Once = Once::new();
         // Create an uninitialized static
@@ -61,9 +64,12 @@ impl ConfigSingletonReader {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Config {
+    /// Vector of all users specified in the configuration.
+    /// Will be only the default user if the configuration
+    /// was not found or was invalid.
     users: Vec<User>,
 
-    // This is needed only internally, thus we don't need to deserialize it
+    // This field is needed only internally, thus we don't need to deserialize it
     #[serde(skip_deserializing)]
     pub is_default_user: bool,
 }
@@ -108,7 +114,7 @@ where
             let config = ConfigSingletonReader::singleton()
                 .inner
                 .lock()
-                .expect("Thread failed to unwrap `ConfigSingletonReader`");
+                .expect("Thread failed to lock `ConfigSingletonReader`");
 
             // Splitting the base64 decoded string and getting the username and password from it
             let mut decoded_split = decoded.split(':');
@@ -135,7 +141,7 @@ where
 }
 
 impl Config {
-    // Default configuration with default user
+    /// Default configuration with default user
     pub fn default() -> Self {
         Config {
             users: vec![User::default()],
@@ -145,13 +151,13 @@ impl Config {
         }
     }
 
-    // For initializing the `ConfigSingletonReader` singleton
+    /// For initializing the `ConfigSingletonReader`'s singleton
     pub fn init() {
         // Initializing the singleton
         let config = ConfigSingletonReader::singleton()
             .inner
             .lock()
-            .expect("Thread failed to unwrap `ConfigSingletonReader`");
+            .expect("Thread failed to lock `ConfigSingletonReader`");
 
         // If configuration file was not found
         if config.is_default_user {
@@ -188,15 +194,15 @@ pub trait ConfigTrait {
 }
 
 impl ConfigTrait for Config {
-    // For getting one user from the configuration
+    /// For getting one user from the configuration
     fn verify_user(&self, username: &str, password: &str) -> Option<&User> {
         self.users
             .iter()
             .find(|it| it.username == username && it.password == password)
     }
 
-    // For getting the length of user list
+    /// For getting the length of user list
     fn get_users_size(&self) -> usize {
-        Arc::from(&self.users).len()
+        self.users.len()
     }
 }
