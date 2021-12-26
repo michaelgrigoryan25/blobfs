@@ -1,3 +1,6 @@
+// FileSystem Extended (FSX)
+// Provides additional functions for working with the filesystem.
+
 use crate::util::{get_string_path, partial_infer};
 use axum::body::Bytes;
 use glob::{glob, GlobError};

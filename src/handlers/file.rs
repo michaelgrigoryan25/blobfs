@@ -1,6 +1,6 @@
-use crate::util::{
+use crate::{
     config::{Permission, User},
-    fsx, has_permission,
+    util::{fsx, has_permission},
 };
 use axum::{extract::Path, http::HeaderValue};
 use hyper::{HeaderMap, StatusCode};

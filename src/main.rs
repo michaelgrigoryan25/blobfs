@@ -2,8 +2,7 @@
 extern crate axum_debug;
 
 use crate::{
-    handlers::{file, remove, upload},
-    util::config::Config,
+    handlers::{file, remove, upload}, config::Config,
 };
 use axum::{
     routing::{any, delete, get, post},
@@ -15,6 +14,7 @@ use std::{env, process::exit};
 mod handlers;
 mod middleware;
 mod util;
+mod config;
 
 /// ASCII text that will be printed on Stormi's startup
 const ASCII_BANNER: &str = r#"

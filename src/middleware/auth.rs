@@ -1,26 +1,51 @@
-use axum::response::IntoResponse;
-use hyper::StatusCode;
+use super::AuthError;
+use crate::config::{ConfigSingletonReader, ConfigTrait, User};
+use async_trait::async_trait;
+use axum::extract::{FromRequest, RequestParts};
 
-// Authentication errors
-const ERR_USER_NOT_FOUND: &str = "User was not found";
-const ERR_INVALID_CREDENTIALS: &str = "Invalid credentials";
-const ERR_MISSING_HEADER: &str = "`Authorization` header is missing from the request";
+#[async_trait]
+/// Authentication implementation for `User` struct
+impl<B> FromRequest<B> for User
+where
+    B: Send,
+{
+    type Rejection = AuthError;
 
-#[derive(Debug)]
-pub enum AuthError {
-    UserNotFound,
-    BadCredentials,
-    MissingAuthorizationHeader,
-}
+    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+        let authorization = req
+            .headers()
+            .expect("Cannot get headers")
+            .get("authorization");
 
-impl IntoResponse for AuthError {
-    fn into_response(self) -> axum::response::Response {
-        let (status, message) = match self {
-            AuthError::UserNotFound => (StatusCode::UNAUTHORIZED, ERR_USER_NOT_FOUND),
-            AuthError::BadCredentials => (StatusCode::UNAUTHORIZED, ERR_INVALID_CREDENTIALS),
-            AuthError::MissingAuthorizationHeader => (StatusCode::UNAUTHORIZED, ERR_MISSING_HEADER),
-        };
+        if let Some(authorization) = authorization {
+            let bytes = base64::decode(&authorization).unwrap();
+            let decoded = String::from_utf8_lossy(&bytes);
 
-        (status, message).into_response()
+            // Reading config from singleton
+            let config = ConfigSingletonReader::singleton()
+                .inner
+                .lock()
+                .expect("Thread failed to lock `ConfigSingletonReader`");
+
+            // Splitting the base64 decoded string and getting the username and password from it
+            let mut decoded_split = decoded.split(':');
+            let (username, password) = (&decoded_split.next(), &decoded_split.next());
+
+            if let (Some(username), Some(password)) = (*username, *password) {
+                // Checking whether the user is valid
+                let user = config.verify_user(username, password);
+
+                // Checking whether the user is valid
+                if let Some(user) = user {
+                    return Ok(user.clone());
+                }
+
+                return Err(AuthError::UserNotFound);
+            }
+
+            return Err(AuthError::BadCredentials);
+        }
+
+        return Err(AuthError::MissingAuthorizationHeader);
     }
 }

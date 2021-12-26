@@ -1,9 +1,6 @@
 use crate::{
     handlers::Response,
-    util::{
-        config::{Permission, User},
-        fsx, has_permission,
-    },
+    util::{fsx, has_permission}, config::{Permission, User},
 };
 use axum::Json;
 use hyper::StatusCode;

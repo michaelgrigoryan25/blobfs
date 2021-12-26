@@ -1,4 +1,4 @@
-use crate::util::config::{Permission, User};
+use crate::config::{Permission, User};
 use crate::util::{fsx, has_permission};
 use crate::{handlers::Response, util::partial_infer};
 use axum::{extract::Multipart, http::StatusCode, Json};

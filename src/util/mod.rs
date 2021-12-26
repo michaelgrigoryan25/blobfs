@@ -1,7 +1,6 @@
-use self::config::{Permission, User};
+use crate::config::{Permission, User};
 use std::env;
 
-pub mod config;
 pub mod fsx;
 
 /// For reading files from the `data` folder
@@ -18,15 +17,16 @@ pub fn has_permission(user: &User, permission: Permission) -> bool {
 
 /// This line infers file's mimetype without reading it completely
 /// Instead it reads the file to the point where the mime type can be inferred
-/// 
+///
 /// Here is an example of equivalent logic:
 ///
 /// ```
 /// {
 ///     let mut tmp: Vec<u8> = vec![];
-/// 
+///
 ///     for byte in &bytes {
 ///         tmp.push(*byte);
+///
 ///         match infer::get(&tmp) {
 ///             Some(t) => {
 ///                 mime = t.mime_type().to_string();
