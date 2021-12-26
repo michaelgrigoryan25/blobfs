@@ -12,7 +12,7 @@ pub fn get_string_path(path_segments: &[&str]) -> String {
 
 /// For checking if a user has the specified permission
 pub fn has_permission(user: &User, permission: Permission) -> bool {
-    user.permissions.iter().any(|&it| it == permission)
+    user.permissions.contains(&permission)
 }
 
 /// This line infers file's mimetype without reading it completely
