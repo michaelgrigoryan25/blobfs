@@ -2,7 +2,8 @@
 extern crate axum_debug;
 
 use crate::{
-    handlers::{file, remove, upload}, config::Config,
+    config::Config,
+    handlers::{file, remove, upload},
 };
 use axum::{
     routing::{any, delete, get, post},
@@ -11,10 +12,10 @@ use axum::{
 use hyper::StatusCode;
 use std::{env, process::exit};
 
+mod config;
 mod handlers;
 mod middleware;
 mod util;
-mod config;
 
 /// ASCII text that will be printed on Stormi's startup
 const ASCII_BANNER: &str = r#"
@@ -57,8 +58,8 @@ async fn main() {
         .route("/favicon.ico", any(|| async { StatusCode::NOT_FOUND }))
         .route("/:hash", get(file::handler))
         .route("/upload", post(upload::handler))
-        // TODO: Add authentication layer
         .route("/remove", delete(remove::handler));
+    // .route_layer();
 
     let server = axum::Server::bind(&addr).serve(stormi.into_make_service());
 
