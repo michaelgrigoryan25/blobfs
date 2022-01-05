@@ -1,8 +1,11 @@
 use super::Permission;
 use serde::Deserialize;
 
+/// Default username for default user
 pub const DEFAULT_USERNAME: &str = "stormi";
+/// Default password for default user
 pub const DEFAULT_PASSWORD: &str = "stormi-admin";
+/// Default permissions for default user
 pub const DEFAULT_PERMISSIONS: &[Permission] = &[Permission::Read, Permission::Write];
 
 /// [User] struct that will be read from the configuration.

@@ -7,7 +7,11 @@ use glob::{glob, GlobError};
 use rand::{distributions::Alphanumeric, Rng};
 use std::{fs, path::PathBuf};
 
+/// Default file extension for the files that did not have
+/// a valid inferred mimetype. We are just saving them as text
 const TXT_EXTENSION: &str = ".txt";
+/// Default length for all hashes
+const DEFAULT_HASH_LENGTH: usize = 24;
 
 /// For removing files with their hash from `data` directory
 pub fn remove_file(hash: &str) {
@@ -24,8 +28,7 @@ pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, std::io::Error> {
     // Generating a random alphanumerical hash
     let hash: String = rand::thread_rng()
         .sample_iter(Alphanumeric)
-        // Default length for all hashes
-        .take(24)
+        .take(DEFAULT_HASH_LENGTH)
         .map(char::from)
         .collect();
 

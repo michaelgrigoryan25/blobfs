@@ -13,6 +13,7 @@ pub async fn handler(user: User, Path(hash): Path<String>) -> Result<(HeaderMap,
         return match fsx::get_from_hash(hash.as_ref()) {
             Ok((content, mime)) => {
                 let mut headers = HeaderMap::new();
+
                 headers.append("Content-Type", HeaderValue::from_str(&mime).unwrap());
 
                 Ok((headers, content))

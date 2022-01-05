@@ -1,18 +1,21 @@
 use crate::{
+    config::{Permission, User},
     handlers::Response,
-    util::{fsx, has_permission}, config::{Permission, User},
+    util::{fsx, has_permission},
 };
 use axum::Json;
 use hyper::StatusCode;
 use serde::Deserialize;
 
-// The JSON form which is going to hold all the hashes that the client wants to delete
+/// The JSON form which is going to hold all
+/// the hashes that the client wants to delete
 #[derive(Deserialize)]
 pub struct Remove {
+    /// List of hashes to remove
     hashes: Vec<String>,
 }
 
-// #[debug_handler]
+#[debug_handler]
 pub async fn handler(user: User, form: Json<Remove>) -> Result<Json<Response>, StatusCode> {
     // TODO: Somehow get rid of the boilerplate
     if has_permission(&user, Permission::Write) {
@@ -33,8 +36,8 @@ pub async fn handler(user: User, form: Json<Remove>) -> Result<Json<Response>, S
             }
         }
 
-        let response = Json::from(Response::new(removed, skipped));
-        Ok(response)
+        let response = Response::new(removed, skipped);
+        Ok(Json::from(response))
     } else {
         // User does not have the `Write` permission
         Err(StatusCode::FORBIDDEN)
