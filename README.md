@@ -2,7 +2,7 @@
 
 Stormi is a fast and simple, hash-based file-server written in Rust
 
-### How does it work?
+## How does it work?
 
 Stormi accepts `multipart/form-data` form with media payload, writes the data to disk and automatically infers the mimetype of the uploaded files.
 
@@ -20,7 +20,7 @@ Stormi has 3 endpoints:
 
 ### Request structure
 
-- ##### Request structure for `/remove` endpoint:
+- #### Request structure for `/remove` endpoint
 
 ```json
 {
@@ -28,7 +28,7 @@ Stormi has 3 endpoints:
 }
 ```
 
-- ##### Request to `/upload` should contain a `multipart/form-data` form.
+- ##### Request to `/upload` should contain a `multipart/form-data` form
 
 #### Send a request to `/upload` with `curl`
 
@@ -37,7 +37,7 @@ Create a **base64 encoded** string with your credentials in the following format
 Send the request `curl`:
 
 ```shell
-$ curl -X POST --form file='file.png' http://127.0.0.1:6345/upload -H 'Authorization: credentials'
+curl -X POST --form file='file.png' http://127.0.0.1:6345/upload -H 'Authorization: credentials'
 ```
 
 ### Response structure
@@ -56,9 +56,25 @@ Response structure of `/upload` and `/remove` is the same:
 
 ### Wrappers
 
-Here is a list of different wrapper implementations around the Stormi API
+Here is a list of different wrapper implementations around the Stormi API.
 
 - [TypeScript](https://github.com/polygon-isecure/stormi.ts)
+
+#### Connection string structure
+
+When connecting to Stormi via wrappers, it will be helpful to utilize a
+connection string instead of supplying all the parameters in separate fields.
+Stormi connection string follows the structure below:
+
+```http
+http://<user>:<pass>@<host>:<port>/
+```
+
+In the real world, you would have a connection string that looks similar to this
+
+```http
+https://admin:str0ng-passw0rd@153.421.0.8:6345/
+```
 
 ### Configuring and running Stormi
 
@@ -67,13 +83,13 @@ To configure Stormi, you will need to create a `config.yaml` file and add at lea
 You can compile Stormi locally using the following command:
 
 ```shell
-$ cargo build --release
+cargo build --release
 ```
 
 and start it using:
 
 ```shell
-$ ./target/release/stormi
+./target/release/stormi
 ```
 
 #### Deploy with Docker
@@ -83,11 +99,11 @@ You can also create a Stormi instance using Docker
 Pull the image:
 
 ```shell
-$ docker pull ghcr.io/polygon-isecure/stormi:latest
+docker pull ghcr.io/polygon-isecure/stormi:latest
 ```
 
 Create an instance:
 
 ```shell
-$ docker run -dp 6435:6435 --name stormi ghcr.io/polygon-isecure/stormi:latest
+docker run -dp 6435:6435 --name stormi ghcr.io/polygon-isecure/stormi:latest
 ```
