@@ -73,7 +73,7 @@ http://<user>:<pass>@<host>:<port>/
 In the real world, you would have a connection string that looks similar to this
 
 ```http
-https://admin:str0ng-passw0rd@153.421.0.8:6345/
+https://admin:str0ng-passw0rd@48.247.139.178:6345/
 ```
 
 ### Configuring and running Stormi
