@@ -1,6 +1,7 @@
 use crate::config::user::{DEFAULT_PERMISSIONS, DEFAULT_USERNAME};
 use serde::Deserialize;
 use std::{
+    env,
     mem::MaybeUninit,
     path::PathBuf,
     sync::{Mutex, Once},
@@ -11,6 +12,8 @@ mod user;
 
 pub use permission::Permission;
 pub use user::User;
+
+const DEFAULT_ULOC: &str = "/data/";
 
 /// Singleton for loading the configuration once and reading from it
 #[derive(Debug)]
@@ -28,19 +31,10 @@ impl ConfigSingletonReader {
 
         unsafe {
             ONCE.call_once(|| {
-                let singleton: ConfigSingletonReader;
-
-                // Reading the configuration from `config.yaml`
-                // If the deserialization did not fail
-                if let Ok(config) = Config::read_config() {
-                    singleton = ConfigSingletonReader {
-                        inner: Mutex::new(config),
-                    };
-                } else {
-                    singleton = ConfigSingletonReader {
-                        inner: Mutex::new(Config::default()),
-                    }
-                }
+                let config = Config::read_config();
+                let singleton = ConfigSingletonReader {
+                    inner: Mutex::new(config),
+                };
 
                 // Initializing the singleton
                 SINGLETON.write(singleton);
@@ -54,6 +48,7 @@ impl ConfigSingletonReader {
 }
 
 #[derive(Clone, Debug, Deserialize)]
+#[non_exhaustive]
 /// Configuration holder. Content from a config.yaml
 /// file will be serialized into corresponding values.
 pub struct Config {
@@ -61,12 +56,24 @@ pub struct Config {
     /// Will be only the default user if the configuration
     /// was not found or was invalid.
     users: Vec<User>,
+    /// Initially, we are going to check if the port from
+    /// the configuration exists and is valid. If it is [None]
+    /// Stormi will try to get and parse the `STORMI_PORT`
+    /// environment variable. If both environment variable
+    /// and configuration ports are [None], then it will
+    /// default to 6345.
+    pub port: Option<u16>,
+    /// Stormi will try to verify and bind to the address
+    /// supplied from the `config.yaml` file. If the address
+    /// is invalid or is [None], it will bind to `127.0.0.1`.
+    pub addr: Option<String>,
+    /// Default upload location for all files. If is [None],
+    /// will default to `$PWD/data/`.
+    pub uloc: String,
 
     // These fields are needed only internally, thus we don't need to deserialize them
-    /// For detecting if the configuration
-    /// has been created with a default user.
     #[serde(skip_deserializing)]
-    pub is_default_user: bool,
+    pub is_default_config: bool,
 
     /// Configuration path(if exists)
     #[serde(skip_deserializing)]
@@ -83,7 +90,7 @@ impl Config {
             .expect("Thread failed to lock `ConfigSingletonReader`");
 
         // If configuration file was not found
-        if config.is_default_user {
+        if config.is_default_config {
             println!("> Configuration file `config.yaml` is invalid or does not exist");
             println!("..This is highly insecure. Please consider adding valid configuration");
             println!(
@@ -101,30 +108,39 @@ impl Config {
 
 pub trait ConfigTrait {
     fn default() -> Config;
+    fn read_config() -> Config;
     fn get_users_size(&self) -> usize;
-    fn read_config() -> Result<Config, serde_yaml::Error>;
     fn verify_user(&self, username: &str, password: &str) -> Option<&User>;
 }
 
 impl ConfigTrait for Config {
-    /// Default configuration with default [User]
+    /// Default configuration. Includes only one
+    /// [User] with default [crate::config::Permission::Read]
+    /// and [crate::config::Permission::Write] permissions
     fn default() -> Self {
         Config {
+            port: None,
+            addr: None,
             config_path: None,
-            is_default_user: true,
+            is_default_config: true,
             users: vec![User::default()],
+            uloc: (env::current_dir()
+                .expect("Error while getting current directory")
+                .to_string_lossy()
+                + DEFAULT_ULOC)
+                .to_string(),
         }
     }
 
     /// For reading the configuration from `config.yaml`
-    fn read_config() -> Result<Config, serde_yaml::Error> {
+    fn read_config() -> Config {
         // If `config.yaml` was found
         if let Ok(config) = std::fs::read_to_string("config.yaml") {
             // Convert YAML to struct
-            serde_yaml::from_str::<Config>(&config)
+            serde_yaml::from_str::<Config>(&config).expect("Invalid configuration error")
         } else {
             // Default configuration if the supplied config is either invalid or does not exist
-            Ok(Config::default())
+            Config::default()
         }
     }
 

@@ -6,6 +6,7 @@ pub mod upload;
 
 /// Response struct for all handlers
 #[derive(Debug, Serialize)]
+#[non_exhaustive]
 pub struct Response {
     /// Hashes that have been created, updated or deleted
     hashes: Vec<String>,

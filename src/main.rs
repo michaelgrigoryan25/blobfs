@@ -2,15 +2,16 @@
 extern crate axum_debug;
 
 use crate::{
-    config::Config,
+    config::{Config, ConfigSingletonReader},
     handlers::{file, remove, upload},
+    util::addr,
 };
 use axum::{
     routing::{any, delete, get, post},
     Router,
 };
 use hyper::StatusCode;
-use std::{env, process::exit};
+use std::net::SocketAddr;
 
 mod config;
 mod handlers;
@@ -34,23 +35,14 @@ async fn main() {
     // Loading the configuration and logging information
     Config::init();
 
-    // Getting a custom port from the environment or binding to the default one
-    let port = match env::var("STORMI_PORT") {
-        Ok(port) => port.parse::<u16>().unwrap_or_else(|_| {
-            eprintln!(
-                "`STORMI_PORT` should be a 16-bit unsigned integer. {} is out of range",
-                port
-            );
-            exit(1)
-        }),
-        _ => 6345,
-    };
+    // Reading the configuration through the `ConfigSingletonReader`
+    let config = ConfigSingletonReader::singleton()
+        .inner
+        .lock()
+        .expect("Thread was not able to lock `ConfigSingletonReader`");
 
-    // Parsing the address as a `SocketAddr` to use with server
-    let addr = format!("127.0.0.1:{}", port).parse().unwrap_or_else(|_| {
-        eprintln!("Invalid `SocketAddr` was supplied");
-        exit(1)
-    });
+    let port: u16 = addr::get_port(&config);
+    let addr: SocketAddr = addr::get_addr(&config, port);
 
     // Initializing the routes
     let stormi = Router::new()
@@ -59,7 +51,6 @@ async fn main() {
         .route("/:hash", get(file::handler))
         .route("/upload", post(upload::handler))
         .route("/remove", delete(remove::handler));
-    // .route_layer();
 
     let server = axum::Server::bind(&addr).serve(stormi.into_make_service());
 

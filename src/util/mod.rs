@@ -2,6 +2,7 @@ use crate::config::{Permission, User};
 use std::env;
 
 pub mod fsx;
+pub mod addr;
 
 /// For reading files from the `data` folder
 pub fn get_string_path(path_segments: &[&str]) -> String {

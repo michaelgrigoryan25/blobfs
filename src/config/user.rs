@@ -11,6 +11,7 @@ pub const DEFAULT_PERMISSIONS: &[Permission] = &[Permission::Read, Permission::W
 /// [User] struct that will be read from the configuration.
 /// This struct is used internally too, for user authentication.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct User {
     pub username: String,
     pub password: String,

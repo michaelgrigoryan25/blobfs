@@ -10,6 +10,7 @@ use serde::Deserialize;
 /// The JSON form which is going to hold all
 /// the hashes that the client wants to delete
 #[derive(Deserialize)]
+#[non_exhaustive]
 pub struct Remove {
     /// List of hashes to remove
     hashes: Vec<String>,
