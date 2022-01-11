@@ -44,6 +44,12 @@ async fn main() {
     let port: u16 = addr::get_port(&config);
     let addr: SocketAddr = addr::get_addr(&config, port);
 
+    // Dropping the configuration to make it available
+    // to all threads, otherwise it will stay locked
+    // in current scope and we won't be able to use
+    // the singleton anymore.
+    drop(config);
+
     // Initializing the routes
     let stormi = Router::new()
         // To not get random errors from `file::handler`
