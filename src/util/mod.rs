@@ -1,14 +1,15 @@
 use crate::config::{Permission, User};
 use std::env;
+use std::path::PathBuf;
 
-pub mod fsx;
 pub mod addr;
+pub mod fsx;
 
-/// For reading files from the `data` folder
-pub fn get_string_path(path_segments: &[&str]) -> String {
-    let mut current_dir = env::current_dir().unwrap();
-    path_segments.iter().for_each(|it| current_dir.push(it));
-    current_dir.to_string_lossy().to_string()
+/// For reading files from the upload location
+pub fn get_string_path(path_segments: &[&str]) -> PathBuf {
+    let mut dir = env::current_dir().unwrap();
+    dir.extend(path_segments);
+    dir
 }
 
 /// For checking if a user has the specified permission

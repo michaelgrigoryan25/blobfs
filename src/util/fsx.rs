@@ -6,6 +6,8 @@ use axum::body::Bytes;
 use glob::{glob, GlobError};
 use rand::{distributions::Alphanumeric, Rng};
 use std::{fs, path::PathBuf};
+use std::sync::MutexGuard;
+use crate::{Config, ConfigSingletonReader};
 
 /// Default file extension for the files that did not have
 /// a valid inferred mimetype. We are just saving them as text
@@ -13,9 +15,14 @@ const TXT_EXTENSION: &str = ".txt";
 /// Default length for all hashes
 const DEFAULT_HASH_LENGTH: usize = 24;
 
+static CONFIG: MutexGuard<Config> = ConfigSingletonReader::singleton()
+    .inner
+    .lock()
+    .expect("Thread failed to lock `ConfigSingletonReader`");
+
 /// For removing files with their hash from `data` directory
 pub fn remove_file(hash: &str) {
-    let path = get_string_path(&["data", "files", hash]);
+    let path = get_string_path(&[&CONFIG.uloc, hash]);
 
     // We are skipping the part of checking whether the file exists or not.
     // Instead the result is always void. If the file exists, remove it, if not there is no need for additional handling.
@@ -33,7 +40,7 @@ pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, std::io::Error> {
         .collect();
 
     // The output path of the files
-    let mut path = get_string_path(&["data", "files", &hash]);
+    let mut path = get_string_path(&[&CONFIG.uloc, &hash]);
 
     // Getting the extension from the mime type if
     // it exists and appending it to the file path
@@ -51,8 +58,8 @@ pub fn write_file(bytes: &Bytes, mime: &str) -> Result<String, std::io::Error> {
 
 /// For finding and reading a file with its hash
 pub fn get_from_hash(hash: &str) -> Result<(Vec<u8>, String), Box<dyn std::error::Error>> {
-    let hash_path = get_string_path(&["data", "files", hash]);
-    let path: Result<PathBuf, GlobError> = glob(&format!("{}.*", hash_path))?.collect();
+    let hash_path = get_string_path(&[&CONFIG.uloc, hash]).as_os_str();
+    let path: Result<PathBuf, GlobError> = glob(&format!("{}.*", **hash_path))?.collect();
     let bytes = fs::read(path.unwrap())?;
     let mime = partial_infer(&bytes);
     Ok((bytes, mime))

@@ -1,10 +1,11 @@
+/.idea
 /target
 
-data/files/*
-!data/files/.gitkeep
+/data/files/*
+/!data/files/.gitkeep
 
-data/keys/*
-!data/keys/.gitkeep
-!data/keys/test_*.pem
+/data/keys/*
+/!data/keys/.gitkeep
+/!data/keys/test_*.pem
 
-config.yaml
+/config.yaml

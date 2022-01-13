@@ -51,7 +51,7 @@ async fn main() {
     drop(config);
 
     // Initializing the routes
-    let stormi = Router::new()
+    let stormi: Router<axum::body::Body> = Router::new()
         // To not get random errors from `file::handler`
         .route("/favicon.ico", any(|| async { StatusCode::NOT_FOUND }))
         .route("/:hash", get(file::handler))
