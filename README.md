@@ -54,12 +54,6 @@ Response structure of `/upload` and `/remove` is the same:
 - `skipped` - the hases that have been skipped
 - `hashes` - the hashes that have been added, modified or removed
 
-### Wrappers
-
-Here is a list of different wrapper implementations around the Stormi API.
-
-- [TypeScript](https://github.com/polygon-isecure/stormi.ts)
-
 #### Connection string structure
 
 When connecting to Stormi via wrappers, it will be helpful to utilize a
