@@ -1,0 +1,14 @@
+[package]
+name = "loghashoo"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4.14"
+chrono = "0.4.19"
+colored = "2.0.0"
+
+[dev-dependencies]
+ctor = "0.1.22"
