@@ -1,0 +1,18 @@
+[package]
+name = "hashoo"
+edition = "2021"
+version = "0.1.0"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4.14"
+anyhow = "1.0.56"
+loghashoo = { path = "../loghashoo" }
+clap = { version = "3.1.6", features = ["derive"] }
+serde = { version = "1.0.136", features = ["derive"] }
+tokio = { version = "1.17.0", features = ["macros", "rt-multi-thread"] }
+
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+tikv-jemallocator = "0.4.3"
