@@ -1,5 +1,3 @@
-pub mod rpc_queue;
-
 /// [VxServer] is a server implementation for vxs. It returns a struct,
 /// which provides different useful handlers, including for starting,
 /// stopping, etc.
