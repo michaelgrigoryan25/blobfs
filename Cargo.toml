@@ -1,0 +1,19 @@
+[package]
+name = "vxs"
+edition = "2021"
+version = "0.1.0"
+rust-version = "1.60.0"
+description = "vxs is a kv blob database."
+homepage = "https://github.com/michaelgrigoryan25/vxs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace]
+members = ["vxs-cli", "vxs-server"]
+
+[profile.release]
+strip = true
+
+[dependencies]
+vxs-cli = { path = "vxs-cli" }
+vxs-server = { path = "vxs-server" }
