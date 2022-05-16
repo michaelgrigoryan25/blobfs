@@ -1,4 +1,0 @@
-target
-
-data/files/*
-!data/files/.gitkeep
