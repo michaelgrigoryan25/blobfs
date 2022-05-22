@@ -14,12 +14,6 @@ pub struct VxServer {
     /// [host-wiki]: <https://en.wikipedia.org/wiki/Hostname>
     #[allow(dead_code)]
     pub(crate) address: String,
-
-    /// vxs-server can function in a verbose mode, in case of which, everything, including
-    /// non-necessary information for production will be printed to stdout and written to
-    /// a dedicated log file.
-    #[allow(dead_code)]
-    pub(crate) verbose: Box<bool>,
 }
 
 impl VxServer {
