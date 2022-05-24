@@ -29,7 +29,7 @@ pub mod proc {
                 println!(
                     "name: {} | pid: {pid} | memory usage: {} | cpu usage: {:.2} | task: {} | uptime: {}",
                     process.name(),
-                    process.memory().to_string(),
+                    process.memory(),
                     process.cpu_usage(),
                     process.exe().display(),
                     process.run_time()
