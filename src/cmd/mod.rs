@@ -1,7 +1,6 @@
 use structopt::StructOpt;
 
-pub mod helpers;
-pub use structopt;
+pub mod proc;
 
 #[derive(Debug, StructOpt)]
 pub struct VxsArgs {
@@ -11,7 +10,7 @@ pub struct VxsArgs {
 
 #[derive(Debug, StructOpt)]
 pub enum VxCommand {
-    /// Start vxs in your desired mode.
+    /// Starts vxs, and binds it to the specified address.
     Start(VxCommandStartArgs),
 
     /// Shows the list of processes running vxs.

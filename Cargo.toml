@@ -8,17 +8,20 @@ homepage = "https://github.com/michaelgrigoryan25/vxs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace]
-members = ["vxs-cli", "vxs-server"]
-
 [profile.release]
+lto = "fat"
 strip = true
+opt-level = 3
 panic = "abort"
-incremental = false
+incremental = true
+overflow-checks = false
+debug-assertions = false
 
 [dependencies]
-log = "0.4"
-tokio = { version = "1.18", features = ["rt-multi-thread", "macros"] }
-
-vxs-cli = { path = "vxs-cli" }
-vxs-server = { path = "vxs-server" }
+sysinfo = "0.23"
+structopt = "0.3"
+clearscreen = "1.0"
+lazy_static = "1.4"
+log = { version = "0.4", features = ["std"] }
+prometheus = { version = "0.13", features = ["push", "process"] }
+tokio = { version = "1.18", features = ["rt-multi-thread", "macros", "signal"] }
