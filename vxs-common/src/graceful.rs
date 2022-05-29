@@ -51,7 +51,7 @@ impl<T: Future> Future for UnsafeSend<T> {
 /// graceful::shutdown(&mut run, &target);
 /// while run {}
 /// ```
-pub(crate) fn shutdown<T>(source: *mut T, target: *const T)
+pub fn shutdown<T>(source: *mut T, target: *const T)
 where
     T: Send + Copy + Debug + 'static,
 {
@@ -62,7 +62,7 @@ where
             if let Ok(_) = tokio::signal::ctrl_c().await {
                 // If Ctrl + C was captured successfully, updating the source value with the target.
                 *source = *target;
-
+                // Additionally, logging some information to stdout, useful for debugging.
                 debug!(target: "graceful::shutdown", "ctrl+c received. source set to: {:?}", &*target);
             }
         }

@@ -4,6 +4,13 @@ pub mod proc;
 
 #[derive(Debug, StructOpt)]
 pub struct VxsArgs {
+    #[structopt(short, long)]
+    /// Similar to --verbose in other applications.
+    ///
+    // Not using the verbose flag, since structopt has a built-in flag --version,
+    // which may create some confusion.
+    pub debug: bool,
+
     #[structopt(subcommand)]
     pub cmd: VxCommand,
 }
@@ -41,11 +48,13 @@ pub struct VxCommandProcArgs {
 pub struct VxCommandStartArgs {
     #[structopt(short, long, env = "VXS_ADDRESS")]
     /// Binding address for vxs-server. Should contain a valid
-    /// socket address.
+    /// socket address. This flag must contain a valid IP address,
+    /// or hostname.
     pub address: String,
 
-    #[structopt(short, long, env = "VXS_DETACHED")]
-    /// Start vxs-server in detached mode, by spawning the process in
-    /// the background.
+    #[structopt(short, long)]
+    /// Detached indicates, whether the user spawned the server in the background
+    /// or started it in the foreground. This is passed as an argument from the
+    /// CLI.
     pub detached: bool,
 }
