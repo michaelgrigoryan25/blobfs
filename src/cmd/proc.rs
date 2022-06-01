@@ -8,11 +8,20 @@ use crate::{cmd::VxCommandProcArgs, UnspecifiedError};
 /// Prints a list of `n` processes currently running vxs. If limit is [None]
 /// all processes running vxs-server will be printed to stdout.
 pub async fn list(args: VxCommandProcArgs) -> UnspecifiedError<()> {
-    let (mut run, target) = (true, false);
-    graceful::shutdown(&mut run, &target);
-    let mut sys = sysinfo::System::new();
-    let dur = Duration::from_secs(args.interval);
+    let mut run = true;
+    // Starting a background task, and listening for ctrl+c. `run`
+    // will be updated, and set to `false` after the capture.
+    graceful::shutdown(&mut run, &false);
 
+    let mut sys = sysinfo::System::new();
+    // This is the interval that the user defined in seconds.
+    let sleep_duration = Duration::from_secs(args.interval);
+
+    // This loop, contains a mutable condition. Clippy however, thinks that
+    // the provided value does not change, but it does. Just in a separate
+    // background task that will update the value automatically whenever
+    // ctrl+c signal is received.
+    #[allow(clippy::while_immutable_condition)]
     while run {
         sys.refresh_all();
 
@@ -45,7 +54,7 @@ pub async fn list(args: VxCommandProcArgs) -> UnspecifiedError<()> {
         // Continuous process information reporting requested.
         if args.continuous {
             // Sleeping for the specified number of seconds.
-            tokio::time::sleep(dur).await;
+            tokio::time::sleep(sleep_duration).await;
         } else {
             // If the `continuous` flag was not specified, breaking the loop
             // after the first iteration.

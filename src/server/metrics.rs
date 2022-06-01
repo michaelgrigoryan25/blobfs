@@ -18,7 +18,7 @@ lazy_static! {
         "HTTP response times",
         &["method", "path"],
     )
-    .expect("vxs_server::metrics::HTTP_RESPONSE_TIME_SECONDS: cannot create metric");
+    .expect("HTTP_RESPONSE_TIME_SECONDS: cannot create metric");
 }
 
 // let mut buffer = vec![];

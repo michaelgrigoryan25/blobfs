@@ -13,10 +13,8 @@ members = ["vxs-common"]
 
 [profile.release]
 lto = "fat"
-strip = true
 opt-level = 3
-panic = "abort"
-incremental = true
+strip = "debuginfo"
 overflow-checks = false
 debug-assertions = false
 

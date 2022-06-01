@@ -59,7 +59,7 @@ where
     // for the signal.
     tokio::spawn(UnsafeSend(async move {
         unsafe {
-            if let Ok(_) = tokio::signal::ctrl_c().await {
+            if tokio::signal::ctrl_c().await.is_ok() {
                 // If Ctrl + C was captured successfully, updating the source value with the target.
                 *source = *target;
                 // Additionally, logging some information to stdout, useful for debugging.
