@@ -5,4 +5,4 @@ pub mod server;
 /// error type.
 ///
 /// Note that this wrapper only works with errors which implement [std::error::Error].
-pub type UnspecifiedError<T> = Result<T, Box<dyn std::error::Error>>;
+pub type Unspecified<T> = Result<T, Box<dyn std::error::Error>>;

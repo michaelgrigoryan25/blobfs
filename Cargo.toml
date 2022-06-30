@@ -8,21 +8,18 @@ homepage = "https://github.com/michaelgrigoryan25/vxs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace]
-members = ["vxs-common"]
-
 [profile.release]
 lto = "fat"
 opt-level = 3
 strip = "debuginfo"
-overflow-checks = false
-debug-assertions = false
 
 [dependencies]
-sysinfo = "0.23"
-structopt = "0.3"
-lazy_static = "1.4"
-prometheus = { version = "0.13", features = ["push", "process"] }
-tokio = { version = "1.18", features = ["rt-multi-thread", "macros", "signal"] }
-
-vxs-common = { path = "vxs-common" }
+structopt = "0"
+tokio = { version = "1", features = [
+    "rt",
+    "net",
+    "time",
+    "macros",
+    "signal",
+    "rt-multi-thread",
+] }
