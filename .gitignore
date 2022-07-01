@@ -96,3 +96,6 @@ $RECYCLE.BIN/
 
 # Project-specific cargo configuration.
 .cargo/config.toml
+
+# Log files
+*.log
