@@ -43,6 +43,7 @@ impl Server {
                     // stored in the async task.
                     let mut buffer: Vec<u8> = vec![0; 1024];
                     match stream.try_read(&mut buffer) {
+                        Ok(0) => continue,
                         Ok(count) => debug!("read {} bytes", count),
                         Err(ref e) if e.kind() == ErrorKind::WouldBlock => continue,
                         Err(e) => error!("error while reading the stream: {}", e),
