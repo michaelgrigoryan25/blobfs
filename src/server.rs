@@ -1,45 +1,90 @@
-use std::io::{self, ErrorKind};
+use std::{
+	io::{self, ErrorKind},
+	sync::Arc,
+};
+
+use tokio::io::AsyncReadExt;
+
+use crate::{FromResulting, IntoResulting};
 
 /// TCP server implementation built on top of [tokio::net::TcpListener].
 pub struct Server {
 	pub(crate) listener: tokio::net::TcpListener,
-
-	/// The channel that is going to be used for sending a shutdown signal to
-	/// the caller for graceful shutdown handling.
-	#[allow(unused)]
-	shutdown: tokio::sync::broadcast::Sender<()>,
+	// pub(crate) shutdown_tx: tokio::sync::mpsc::Sender<()>,
+	// pub(crate) shutdown_rx: tokio::sync::mpsc::Receiver<()>,
 }
 
 impl Server {
-	pub(crate) async fn new(
-		address: Option<String>,
-		shutdown: tokio::sync::broadcast::Sender<()>,
-	) -> io::Result<Self> {
-		let address = address.unwrap_or_else(|| "127.0.0.1:0".into());
+	/// Creates a new TCP server, and binds to the provided IP address.
+	pub(crate) async fn new(address: String) -> io::Result<Self> {
 		let listener = tokio::net::TcpListener::bind(address).await?;
-		Ok(Self { listener, shutdown })
+		Ok(Self { listener })
 	}
 
 	/// Starts the server, and executes optionally provided callback allocated on
 	/// the heap. This function blocks indefinitely, and returns an error, once a
 	/// critical error occurs.
-	pub(crate) async fn run(self) -> io::Result<()> {
+	pub(crate) async fn run(self) -> Result<(), Box<dyn std::error::Error>> {
+		let semaphore = Arc::new(tokio::sync::Semaphore::new(5));
 		loop {
-			if let Ok((stream, ref addr)) = self.listener.accept().await {
-				trace!("tcp/ip connection established: {}", addr);
-				if stream.readable().await.is_ok() {
-					// Creating the buffer after the `await` prevents it from being
-					// stored in the async task.
-					let mut buffer = [0; 512];
-					match stream.try_read(&mut buffer) {
-						Ok(read) => info!("{}", String::from_utf8_lossy(&buffer[..read])),
-						Err(ref e) if e.kind() == ErrorKind::WouldBlock => (),
-						Err(e) => error!("error while reading the stream: {}", e),
+			let semaphore = Arc::clone(&semaphore);
+			let (mut stream, addr) = self.listener.accept().await?;
+			tokio::spawn(async move {
+				if let Ok(guard) = semaphore.try_acquire() {
+					let mut buffer = [0; 1024];
+					loop {
+						match stream.read(&mut buffer).await {
+							Ok(0) => continue, // if the stream is empty, looping until it isn't
+							Ok(n) => debug!("{}", String::from_utf8_lossy(&buffer[..n])),
+							Err(ref e) if e.kind() == ErrorKind::WouldBlock => {
+								ServerStatusResponse::Pending.write(&stream).await.unwrap()
+							}
+							Err(e) => {
+								error!("error reading tcp/ip stream: {}", e);
+								break;
+							}
+						}
 					}
-				}
 
-				trace!("tcp/ip connection closed: {}", addr);
-			}
+					// freeing one guard slot after the error occurs, so that a new
+					// connection can be established.
+					drop(guard);
+				} else {
+					error!(
+						"tcp/ip connection from {} refused: too many connections",
+						addr
+					);
+				}
+			});
 		}
+	}
+}
+
+#[derive(Serialize, Deserialize)]
+#[repr(u8)]
+pub enum ServerStatusResponse {
+	Pending = 0x001,
+	Unknown = 0x000,
+}
+
+impl ServerStatusResponse {
+	pub(crate) async fn write(
+		self,
+		stream: &tokio::net::TcpStream,
+	) -> Result<(), Box<dyn std::error::Error>> {
+		stream.try_write(&self.into_resulting()?)?;
+		Ok(())
+	}
+}
+
+impl FromResulting<bytes::Bytes, Box<bincode::ErrorKind>> for ServerStatusResponse {
+	fn from_resulting(bytes: bytes::Bytes) -> Result<Self, Box<bincode::ErrorKind>> {
+		Ok(bincode::deserialize(&bytes)?)
+	}
+}
+
+impl IntoResulting<bytes::Bytes, Box<bincode::ErrorKind>> for ServerStatusResponse {
+	fn into_resulting(self) -> Result<bytes::Bytes, Box<bincode::ErrorKind>> {
+		Ok(bincode::serialize(&self)?.into())
 	}
 }
