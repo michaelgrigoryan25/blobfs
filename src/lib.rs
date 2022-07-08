@@ -1,50 +1,13 @@
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate serde;
 
-/// Contains various commands, their arguments, for working with the command-line.
 pub mod cmd;
-/// Core server code is included in this module.
-mod server;
+pub(crate) mod server;
 
-#[doc(hidden)]
-const VXS_BANNER: &str = r#"
- ___      ___ ___    ___ ________
-|\  \    /  /|\  \  /  /|\   ____\
-\ \  \  /  / | \  \/  / | \  \___|_
- \ \  \/  / / \ \    / / \ \_____  \
-  \ \    / /   /     \/   \|____|\  \
-   \ \__/ /   /  /\   \     ____\_\  \
-    \    /   /__/ /\ __\   |\_________\
-     \__/    |__|/ \|__|   \|_________|
-"#;
-
-#[doc(hidden)]
-const LOGGING_TIME_FORMAT: &str = "%Y-%m-%d@%H:%M:%S";
-
-/// Bootstraps, and starts a new vxs server with the provided [cmd::VxCommandStartArgs].
 pub async fn bootstrap(args: cmd::VxCommandStartArgs) -> Result<(), Box<dyn std::error::Error>> {
-	print!("{}\n{}\n", VXS_BANNER, divider("vxs"));
-
-	fern::Dispatch::new()
-		.format(|out, message, record| {
-			out.finish(format_args!(
-				"{} ({}) {}",
-				chrono::Local::now().format(LOGGING_TIME_FORMAT),
-				record.level().to_string().to_lowercase(),
-				message
-			))
-		})
-		.chain(fern::log_file(args.log_path)?)
-		.chain(std::io::stdout())
-		.level(log::LevelFilter::Trace)
-		.apply()
-		.expect("fern: cannot configure the logger");
-	debug!("fern: logger configured successfully");
-
-	let server = server::Server::new(args.address).await?;
-	debug!("tcp/ip socket bound at: {}", server.listener.local_addr()?);
+	configure_logging(&args)?;
+	let (shutdown_notifier, _) = tokio::sync::broadcast::channel::<()>(1);
+	let server = server::Server::new(args.address, args.max_connections, shutdown_notifier).await?;
 
 	tokio::select! {
 		output = server.run() => {
@@ -52,6 +15,7 @@ pub async fn bootstrap(args: cmd::VxCommandStartArgs) -> Result<(), Box<dyn std:
 				error!("tcp/ip server socket error: {}", e);
 			}
 		}
+
 		_ = tokio::signal::ctrl_c() => {
 			info!("ctrl+c captured. quitting...");
 		}
@@ -64,8 +28,26 @@ pub async fn bootstrap(args: cmd::VxCommandStartArgs) -> Result<(), Box<dyn std:
 #[doc(hidden)]
 /// There is no need pf creating a separate stack frame just for
 /// this small function, thus, it can be inlined.
-fn divider(msg: &str) -> String {
+fn _divider(msg: &str) -> String {
 	format!("{d} {m} {d}", d = "-".repeat(30), m = msg)
+}
+
+fn configure_logging(args: &cmd::VxCommandStartArgs) -> Result<(), Box<dyn std::error::Error>> {
+	fern::Dispatch::new()
+		.format(|out, message, record| {
+			out.finish(format_args!(
+				"{} ({}) {}",
+				chrono::Local::now().format("%Y-%m-%d@%H:%M:%S"),
+				record.level().to_string().to_lowercase(),
+				message
+			))
+		})
+		.chain(fern::log_file(args.log_path.clone())?)
+		.chain(std::io::stdout())
+		.level(log::LevelFilter::Trace)
+		.apply()
+		.expect("fern: cannot configure the logger");
+	Ok(())
 }
 
 /// [FromResulting] is similar to [From] trait, with a difference
