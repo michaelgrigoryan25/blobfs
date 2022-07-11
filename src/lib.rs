@@ -2,53 +2,8 @@
 extern crate log;
 
 pub mod cmd;
-pub(crate) mod server;
-
-pub async fn bootstrap(args: cmd::VxCommandStartArgs) -> Result<(), Box<dyn std::error::Error>> {
-	configure_logging(&args)?;
-	let (shutdown_notifier, _) = tokio::sync::broadcast::channel::<()>(1);
-	let server = server::Server::new(args.address, args.max_connections, shutdown_notifier).await?;
-
-	tokio::select! {
-		output = server.run() => {
-			if let Err(e) = output {
-				error!("tcp/ip server socket error: {}", e);
-			}
-		}
-
-		_ = tokio::signal::ctrl_c() => {
-			info!("ctrl+c captured. quitting...");
-		}
-	}
-
-	Ok(())
-}
-
-#[inline(always)]
-#[doc(hidden)]
-/// There is no need pf creating a separate stack frame just for
-/// this small function, thus, it can be inlined.
-fn _divider(msg: &str) -> String {
-	format!("{d} {m} {d}", d = "-".repeat(30), m = msg)
-}
-
-fn configure_logging(args: &cmd::VxCommandStartArgs) -> Result<(), Box<dyn std::error::Error>> {
-	fern::Dispatch::new()
-		.format(|out, message, record| {
-			out.finish(format_args!(
-				"{} ({}) {}",
-				chrono::Local::now().format("%Y-%m-%d@%H:%M:%S"),
-				record.level().to_string().to_lowercase(),
-				message
-			))
-		})
-		.chain(fern::log_file(args.log_path.clone())?)
-		.chain(std::io::stdout())
-		.level(log::LevelFilter::Trace)
-		.apply()
-		.expect("fern: cannot configure the logger");
-	Ok(())
-}
+pub mod server;
+mod shutdown;
 
 /// [FromResulting] is similar to [From] trait, with a difference
 /// being the [Result] return type. This trait provides a more
@@ -70,4 +25,32 @@ where
 	Self: Sized,
 {
 	fn into_resulting(self) -> Result<T, E>;
+}
+
+/// Configures logging with [fern].
+///
+/// Accepts the path to the logging output. By default, the value will
+/// be handled by the `cmd` module of this crate, and if no other path
+/// is provided, this will default to `./debug.log`.
+///
+/// # Errors
+///
+/// Returns [Err] if the provided log file output directory does not exist
+/// on the system, or if the setup process fails in any way.
+pub fn clog(log_path: String) -> Result<(), Box<dyn std::error::Error>> {
+	fern::Dispatch::new()
+		.format(|out, message, record| {
+			out.finish(format_args!(
+				"{} ({}) {}",
+				chrono::Local::now().format("%Y-%m-%d@%H:%M:%S"),
+				record.level().to_string().to_lowercase(),
+				message
+			))
+		})
+		.chain(fern::log_file(log_path)?)
+		.chain(std::io::stdout())
+		.level(log::LevelFilter::Trace)
+		.apply()?;
+
+	Ok(())
 }
